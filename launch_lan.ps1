@@ -1,4 +1,4 @@
-param(
+﻿param(
   [int]$StartPort = 8000,
   [int]$EndPort = 8010,
   [switch]$NoBrowser

@@ -1,4 +1,4 @@
-param([switch]$Local)
+﻿param([switch]$Local)
 
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
