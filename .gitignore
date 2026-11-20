@@ -1,0 +1,43 @@
+# Python runtime
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets and local configuration
+ai_config.json
+*.env
+.env.*
+
+# Campaign database and automatic backups (contain private play data)
+trpg.sqlite3
+trpg.sqlite3.*
+*.sqlite3
+*.sqlite3-*
+
+# Local generated data
+backups/
+transcripts/
+map-assets/
+uvicorn.out.log
+uvicorn.err.log
+*.log
+browser_selftest_result.json
+
+# PyInstaller build output
+build/
+dist/
+*.spec
+发布/
+
+# Generated screenshots / preview artifacts from local testing
+/*.png
+/*.jpg
+/*.jpeg
+
+# Reference material kept outside the public source tree
+.reference/
+
+# Copyrighted rulebook PDFs (do not redistribute in a public repository)
+rules/*.pdf
+rules/*.txt

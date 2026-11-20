@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>书本按钮素材对比</title>
+<style>
+  :root {
+    --paper: #eef2f7;
+    --card: #fff;
+    --ink: #16202a;
+    --muted: #61707e;
+    --line: #cfd9e4;
+    --accent: #2b5f7d;
+  }
+  body {
+    margin: 0;
+    padding: 40px;
+    background: var(--paper);
+    font-family: "Songti SC", "SimSun", serif;
+    color: var(--ink);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.sub { color: var(--muted); font-size: 12px; margin: 0 0 28px; font-family: system-ui, sans-serif; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+  .cell { display: grid; gap: 10px; justify-items: center; }
+  .label { font-family: system-ui, sans-serif; font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+  .row { display: flex; gap: 10px; align-items: center; }
+
+  /* 三种候选底 */
+  .btn {
+    display: grid;
+    place-items: center;
+    width: 44px; height: 52px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .btn.a { background: var(--card); border: 1px solid var(--line); }
+  .btn.b { background: var(--accent); border: 1px solid #234e66; }
+  .btn.c { background: #f7f2e6; border: 1px solid #e2d7bf; }
+
+  .btn img { width: 26px; height: 26px; display: block; }
+  .btn.b img.line { filter: brightness(0) invert(1); }
+  .btn.a img.line, .btn.c img.line { filter: brightness(0.25); }
+</style>
+</head>
+<body>
+  <h1>书本素材对比</h1>
+  <p class="sub">每一行是一种图标，三种底色（纸白 / 墨蓝 / 米黄）。你看中哪个告诉我编号。</p>
+
+  <div class="grid">
+    <div class="cell">
+      <div class="label">A · 打开的书（彩色）</div>
+      <div class="row">
+        <div class="btn a"><img src="../assets/icons/book-emoji.svg" alt="" /></div>
+        <div class="btn b"><img src="../assets/icons/book-emoji.svg" alt="" /></div>
+        <div class="btn c"><img src="../assets/icons/book-emoji.svg" alt="" /></div>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="label">B · 书堆（彩色）</div>
+      <div class="row">
+        <div class="btn a"><img src="../assets/icons/book-stack-emoji.svg" alt="" /></div>
+        <div class="btn b"><img src="../assets/icons/book-stack-emoji.svg" alt="" /></div>
+        <div class="btn c"><img src="../assets/icons/book-stack-emoji.svg" alt="" /></div>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="label">C · 笔记本（彩色）</div>
+      <div class="row">
+        <div class="btn a"><img src="../assets/icons/notebook-emoji.svg" alt="" /></div>
+        <div class="btn b"><img src="../assets/icons/notebook-emoji.svg" alt="" /></div>
+        <div class="btn c"><img src="../assets/icons/notebook-emoji.svg" alt="" /></div>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="label">D · 线条书（可染色）</div>
+      <div class="row">
+        <div class="btn a"><img class="line" src="../assets/icons/book-lucide.svg" alt="" /></div>
+        <div class="btn b"><img src="../assets/icons/book-lucide.svg" alt="" /></div>
+        <div class="btn c"><img class="line" src="../assets/icons/book-lucide.svg" alt="" /></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

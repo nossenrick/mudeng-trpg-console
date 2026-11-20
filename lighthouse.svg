@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="幕灯灯塔标志">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1f3a"/>
+      <stop offset="1" stop-color="#123a6b"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f8ff"/>
+      <stop offset="1" stop-color="#cfe0ff"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#93c5fd" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#93c5fd" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#sky)"/>
+  <path d="M13 15 L37 22 L37 30 L13 37 Z" fill="url(#beam)" transform="translate(-6 -2) rotate(-8 25 26)"/>
+  <path d="M51 15 L27 22 L27 30 L51 37 Z" fill="url(#beam)" transform="translate(6 -2) rotate(8 39 26)"/>
+  <path d="M23 52 L27 24 H37 L41 52 Z" fill="url(#tower)"/>
+  <path d="M26 34 H38 L39 40 H25 Z" fill="#2563eb"/>
+  <path d="M24.5 46 H39.5 L41 52 H23 Z" fill="#1d4ed8"/>
+  <path d="M27 24 H37 L36 19 H28 Z" fill="#0f2d58"/>
+  <rect x="29" y="15" width="6" height="4" rx="1" fill="#bfdbfe"/>
+  <circle cx="32" cy="17" r="2.2" fill="#fff4bf"/>
+  <path d="M18 52 H46" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M19 56 C24 54 27 56 32 55 C37 54 40 56 45 55" stroke="#3b82f6" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M4 55 C10 53 14 56 20 55 C26 53 30 56 36 55 C42 53 46 56 52 55 C56 54 58 55 60 55" stroke="#1e40af" stroke-width="2" fill="none" opacity=".8"/>
+</svg>

@@ -1,0 +1,2556 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="幕灯 · AI 跑团主持台：把模组、角色和故事收进同一张桌子。" />
+    <title>幕灯 · AI 跑团主持台</title>
+    <link rel="icon" href="lighthouse.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20261102-41" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <script src="coc7e-data.js?v=20261102-41" defer></script>
+    <script src="dnd5e-data.js?v=20261102-41" defer></script>
+    <script src="ghost_house_module.js?v=20261102-41" defer></script>
+    <script src="app.js?v=20261102-41" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <section class="home-overlay" id="homeOverlay" aria-label="跑团入口">
+        <div class="home-shell">
+          <div class="home-brand">
+            <div class="brand-mark" aria-hidden="true"><img src="lighthouse.svg" alt="" /></div>
+            <div>
+              <span class="eyebrow">幕灯 · AI 跑团主持台</span>
+              <h2>把模组变成今晚的故事</h2>
+              <p>选一个剧本，带上调查员或冒险者，让 AI 主持把桌子撑起来。</p>
+            </div>
+            <button type="button" class="home-user-button" id="homeUserButton" title="用户资料">
+              <span class="home-user-avatar" id="homeUserAvatar"></span>
+              <span class="home-user-copy">
+                <strong id="homeUserName">玩家</strong>
+                <small id="homeUserAccount">用户资料</small>
+              </span>
+            </button>
+          </div>
+          <div class="home-role-grid">
+            <button class="home-role-card active" type="button" data-home-role="gm">
+              <i data-lucide="screen-share"></i>
+              <strong>主持人</strong>
+              <span>创建世界、选择规则、管理模组和战斗。</span>
+            </button>
+            <button class="home-role-card" type="button" data-home-role="player">
+              <i data-lucide="user-round"></i>
+              <strong>玩家</strong>
+              <span>选择本设备角色，加入朋友的房间。</span>
+            </button>
+          </div>
+          <section class="home-join-strip" aria-label="加入朋友房间">
+            <div>
+              <strong>已经有房间码？</strong>
+              <span>不用切换主持人/玩家，直接输入代码加入。</span>
+            </div>
+            <input id="homeJoinRoomCode" type="text" maxlength="6" placeholder="例如 P4TTJI" autocomplete="off" />
+            <button class="primary-button" type="button" id="homeJoinRoomButton"><i data-lucide="log-in"></i><span>加入房间</span></button>
+          </section>
+          <div class="home-left-column">
+          <section class="home-resource-hub" aria-label="资源管理">
+            <button class="home-resource-button" type="button" id="openCharacterLibraryButton">
+              <i data-lucide="contact"></i>
+              <strong>角色库</strong>
+              <span>管理本设备的玩家角色原件。</span>
+            </button>
+            <button class="home-resource-button" type="button" id="homeWorldLibraryButton">
+              <i data-lucide="globe-2"></i>
+              <strong>世界观库</strong>
+              <span>查看现代、古代、中世纪等世界模板。</span>
+            </button>
+            <button class="home-resource-button" type="button" id="homeModuleLibraryButton">
+              <i data-lucide="library-big"></i>
+              <strong>模组库</strong>
+              <span>导入文本、文件或 AI 解析后的剧本。</span>
+            </button>
+          </section>
+          </div>
+          <div class="home-content">
+            <section class="campaign-archive" id="campaignArchive" aria-label="战役档案">
+              <div class="section-heading compact">
+                <div>
+                  <span class="eyebrow">战役档案</span>
+                  <h3>继续你的跑团</h3>
+                  <p class="section-kicker">新战役从「开局向导」进入：选模组、车卡、开跑。</p>
+                </div>
+                <div class="button-row tight">
+                  <button class="ghost-button" type="button" id="refreshCampaignArchiveButton" onclick="location.reload();return false;"><i data-lucide="refresh-cw"></i><span>刷新</span></button>
+              <button class="ghost-button" type="button" id="homeSettingsTrigger" title="设置" onclick="event.stopPropagation();var m=document.getElementById('settingsMenu');if(!m){return false;}if(!m.dataset.home){m.dataset.home='1';m.dataset.parent=m.parentNode.className;document.body.appendChild(m);}m.style.position='fixed';m.style.top='84px';m.style.right='24px';m.style.left='auto';m.style.zIndex='2147483000';m.style.maxHeight='70vh';m.style.overflowY='auto';document.getElementById('settingsMenuButton').click();return false;"><i data-lucide="settings-2"></i><span>设置</span></button>
+                </div>
+              </div>
+              <div class="campaign-archive-list" id="campaignArchiveList">
+                <div class="empty-state">正在读取战役档案…</div>
+              </div>
+            </section>
+            <section class="home-pane" data-home-pane="gm">
+              <div class="section-heading">
+                <div>
+                  <h3>创建一个世界</h3>
+                  <p class="section-kicker">这些设置会写入当前存档，并在创建房间时发送给主持服务器。</p>
+                </div>
+              </div>
+              <div class="home-preflight" id="homePreflight"></div>
+              <div class="home-pane-cta">
+                <button class="primary-button" type="button" id="newCampaignButton" title="选世界、模组、车卡、开跑"><i data-lucide="sparkles"></i><span>开新团</span></button>
+              </div>
+              <form id="homeWorldForm" class="home-form">
+                <label><span>世界 / 战役名称</span><input name="title" type="text" value="雾港档案" autocomplete="off" /></label>
+                <label>
+                  <span>规则预设</span>
+                  <select name="ruleSystem" id="homeRuleSystem">
+                    <option value="coc">CoC 7e 完整规则</option>
+                    <option value="dnd-lite">D&amp;D 5e 完整规则</option>
+                    <option value="custom">自定义规则</option>
+                  </select>
+                  <div class="button-row tight" style="margin-top: 8px">
+                    <button class="ghost-button" type="button" id="homeOpenCocSheetButton"><i data-lucide="contact"></i><span>CoC 完整车卡</span></button>
+                    <button class="ghost-button" type="button" id="homeOpenDndSheetButton"><i data-lucide="swords"></i><span>D&amp;D 5e 车卡</span></button>
+                  </div>
+                </label>
+                <label>
+                  <span>世界观</span>
+                  <select name="worldProfileId" id="homeWorldProfile"></select>
+                </label>
+                <label>
+                  <span>模组 / 剧本</span>
+                  <select name="moduleSelection" id="homeModuleSelection"></select>
+                </label>
+                <label><span>世界观简介</span><textarea name="description" rows="3" placeholder="时代、地点、基调和玩家开场已知信息"></textarea></label>
+                <label class="toggle-field"><span>启用经验成长</span><input name="growthEnabled" type="checkbox" checked /></label>
+                <div class="button-row">
+                  <button class="primary-button" type="submit"><i data-lucide="play"></i><span>进入主持台</span></button>
+                  <button class="ghost-button" type="button" id="homeWizardButton"><i data-lucide="sparkles"></i><span>开局向导</span></button>
+                </div>
+              </form>
+            </section>
+            <section class="home-pane" data-home-pane="player" hidden>
+              <div class="section-heading">
+                <div>
+                  <h3>选择你的角色</h3>
+                  <p class="section-kicker">角色原件属于你的设备，主持人只会收到当前房间的参战副本。</p>
+                </div>
+                <button class="icon-button" type="button" id="homeNewCharacterButton" title="新建角色"><i data-lucide="user-round-plus"></i></button>
+              </div>
+              <div class="home-character-list" id="homeCharacterList"></div>
+              <p class="field-hint">已经拿到房间代码？点“加入朋友房间”，不用先进入本地玩家界面。</p>
+              <form id="homePlayerForm" class="home-form">
+                <input name="characterId" type="hidden" />
+                <label><span>玩家昵称</span><input name="name" type="text" value="玩家" autocomplete="off" /></label>
+                <div class="button-row">
+                  <button class="ghost-button" type="submit"><i data-lucide="users"></i><span>本地玩家界面</span></button>
+                  <button class="primary-button" type="button" id="openRoomFromHomeButton"><i data-lucide="log-in"></i><span>加入朋友房间</span></button>
+                </div>
+              </form>
+            </section>
+          </div>
+          <section class="home-library" id="homeLibrary" hidden>
+            <div class="section-heading">
+              <div>
+                <h3>本设备角色库</h3>
+                <p class="section-kicker">参考 trpg-player 的 owner token 思路：角色原件与房间副本分离。</p>
+                <p class="field-hint" id="characterLibraryStatus"></p>
+              </div>
+              <div class="button-row tight">
+                <button class="ghost-button" type="button" id="recoverCharactersButton"><i data-lucide="archive-restore"></i><span>从当前房间恢复</span></button>
+                <button class="ghost-button" type="button" id="homeLibraryNewCharacterButton"><i data-lucide="user-round-plus"></i><span>新建角色</span></button>
+                <button class="ghost-button" type="button" id="libraryOpenCocSheetButton"><i data-lucide="contact"></i><span>CoC 完整车卡</span></button>
+                <button class="ghost-button" type="button" id="libraryOpenDndSheetButton"><i data-lucide="swords"></i><span>D&D 5e 车卡</span></button>
+                <button class="icon-button" type="button" id="closeCharacterLibraryButton" title="关闭"><i data-lucide="x"></i></button>
+              </div>
+            </div>
+            <div class="character-library-layout">
+              <div class="character-library-list" id="homeLibraryCharacterList"></div>
+              <form id="libraryCharacterForm" class="home-form character-library-editor">
+                <input name="id" type="hidden" />
+                <label><span>角色名</span><input name="name" type="text" autocomplete="off" /></label>
+                <label><span>概念 / 职业</span><input name="concept" type="text" autocomplete="off" /></label>
+                <label>
+                  <span>头像</span>
+                  <select name="avatar">
+                    <option value="">默认可爱头像</option>
+                    <option value="cat">小猫</option>
+                    <option value="bear">小熊</option>
+                    <option value="rabbit">小兔</option>
+                  </select>
+                </label>
+                <div class="form-grid four compact-fields">
+                  <label><span>生命</span><input name="maxHp" type="number" min="1" value="10" /></label>
+                  <label><span>技能点</span><input name="maxSkillPoints" type="number" min="0" value="50" /></label>
+                  <label><span>灵敏度</span><input name="agility" type="number" min="0" value="40" /></label>
+                  <label><span>压力</span><input name="pressure" type="number" min="0" max="6" value="0" /></label>
+                </div>
+                <label><span>技能（每行：名称: 数值）</span><textarea name="skills" rows="4" placeholder="侦查: 60&#10;聆听: 50&#10;格斗: 40"></textarea></label>
+                <label><span>属性（可选，每行：名称: 数值）</span><textarea name="attributes" rows="3" placeholder="力量: 55&#10;敏捷: 50&#10;意志: 60"></textarea></label>
+                <section class="character-experience-panel">
+                  <div class="section-heading mini">
+                    <h3>经历</h3>
+                    <span class="status-pill" id="characterExperienceCount">0 次</span>
+                  </div>
+                  <div id="characterExperienceList"></div>
+                </section>
+                <div class="button-row">
+                  <button class="primary-button" type="submit"><i data-lucide="save"></i><span>保存角色</span></button>
+                  <button class="ghost-button" type="button" id="editCocSheetButton"><i data-lucide="contact"></i><span>编辑完整 CoC 卡</span></button>
+                  <button class="ghost-button" type="button" id="editDndSheetButton"><i data-lucide="swords"></i><span>编辑 D&D 卡</span></button>
+                  <button class="ghost-button" type="button" id="deleteLibraryCharacterButton"><i data-lucide="trash"></i><span>删除角色</span></button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="content-library-overlay campaign-wizard-overlay" id="campaignWizardOverlay" hidden aria-label="开局向导">
+        <div class="content-library-shell campaign-wizard-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">开局向导</span>
+              <h2>选模组、车卡、开跑</h2>
+              <p class="section-kicker">AI 会阅读模组，推荐适合这个剧本的角色概念和技能分配；技能只从当前规则和模组技能里选，避免对不上。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeCampaignWizardButton" title="关闭">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="wizard-indicators">
+            <button type="button" class="wizard-indicator active" data-wizard-jump="1">1 · 模组</button>
+            <button type="button" class="wizard-indicator" data-wizard-jump="2">2 · 车卡</button>
+            <button type="button" class="wizard-indicator" data-wizard-jump="3">3 · 开跑</button>
+          </div>
+
+          <div class="wizard-step" data-wizard-step="1">
+            <div class="wizard-world-block">
+              <div class="wizard-world-head">
+                <strong>世界设定</strong>
+                <span>这些会写进本局存档；留空就用模组自带的设定。</span>
+              </div>
+              <div class="wizard-world-grid">
+                <label><span>世界 / 战役名称</span><input id="wizardWorldTitle" type="text" maxlength="80" placeholder="例如：雾港档案" autocomplete="off" /></label>
+                <label><span>规则预设</span><select id="wizardRuleSystem"></select></label>
+                <label><span>世界观</span><select id="wizardWorldProfile"></select></label>
+                <label class="inline-check wizard-world-growth">
+                  <input type="checkbox" id="wizardGrowthEnabled" checked />
+                  <span>启用经验成长</span>
+                </label>
+                <label class="wizard-world-desc"><span>世界观简介</span><textarea id="wizardWorldDescription" rows="2" placeholder="时代、地点、基调，以及玩家开场就知道的信息"></textarea></label>
+              </div>
+            </div>
+            <div class="wizard-module-layout">
+              <div class="wizard-module-list" id="wizardModuleList"></div>
+              <div class="wizard-module-preview" id="wizardModulePreview">
+                <div class="empty-state">选择一个模组查看章节、NPC 和线索。</div>
+              </div>
+            </div>
+            <div class="button-row wizard-actions">
+              <button class="ghost-button" type="button" id="wizardOpenModuleLibraryButton"><i data-lucide="library-big"></i><span>打开模组库</span></button>
+              <button class="primary-button" type="button" id="wizardNextToCharacterButton"><span>下一步：车卡</span><i data-lucide="arrow-right"></i></button>
+            </div>
+          </div>
+
+          <div class="wizard-step" data-wizard-step="2" hidden>
+            <div class="wizard-character-layout">
+              <div class="wizard-character-source">
+                <label>
+                  <span>角色来源</span>
+                  <select id="wizardCharacterMode">
+                    <option value="new">新建角色</option>
+                    <option value="existing">使用角色库已有角色</option>
+                  </select>
+                </label>
+                <label id="wizardExistingCharacterField" hidden>
+                  <span>选择角色</span>
+                  <select id="wizardExistingCharacter"></select>
+                </label>
+                <label id="wizardNewNameField"><span>角色名</span><input id="wizardNewCharacterName" type="text" maxlength="40" placeholder="例如：沈砚" /></label>
+                <label id="wizardNewConceptField"><span>概念 / 职业</span><input id="wizardNewCharacterConcept" type="text" maxlength="80" placeholder="例如：谨慎的民俗研究者" /></label>
+                <label><span>技能分配点数</span><input id="wizardSkillBudget" type="number" min="10" max="600" value="300" /></label>
+                <div class="wizard-budget">已分配 <strong id="wizardSkillTotal">0</strong> / <span id="wizardSkillBudgetLabel">300</span></div>
+                <button class="primary-button" type="button" id="wizardRecommendButton"><i data-lucide="sparkles"></i><span>AI 阅读模组并推荐车卡</span></button>
+                <button class="ghost-button" type="button" id="wizardOpenCocSheetButton"><i data-lucide="contact"></i><span>完整 CoC 车卡</span></button>
+                <button class="ghost-button" type="button" id="wizardOpenDndSheetButton"><i data-lucide="swords"></i><span>D&D 5e 车卡</span></button>
+                <p class="field-hint" id="wizardRecommendStatus">AI 推荐会按模组内容给出概念、属性和技能点；你可以逐项修改。</p>
+              </div>
+              <div class="wizard-recommendation" id="wizardRecommendation">
+                <div class="empty-state">还没有推荐。点击左侧按钮，或手动填写。</div>
+              </div>
+            </div>
+            <div class="button-row wizard-actions">
+              <button class="ghost-button" type="button" data-wizard-prev="1"><i data-lucide="arrow-left"></i><span>上一步</span></button>
+              <button class="primary-button" type="button" id="wizardNextToPartyButton"><span>下一步：队伍</span><i data-lucide="arrow-right"></i></button>
+            </div>
+          </div>
+
+          <div class="wizard-step" data-wizard-step="3" hidden>
+            <div class="wizard-party-layout">
+              <label><span>战役名称</span><input id="wizardCampaignName" type="text" maxlength="80" /></label>
+              <div>
+                <span class="wizard-label">AI 队友（可选，最多 2 个）</span>
+                <div id="wizardAiParty" class="wizard-ai-party"></div>
+                <div class="button-row tight">
+                  <button type="button" class="ghost-button" id="wizardGenerateAiTeammateButton"><i data-lucide="sparkles"></i><span>AI 按模组生成一个队友</span></button>
+                </div>
+                <p class="field-hint" id="wizardAiTeammateStatus">没有合适的角色时，可以让 AI 根据模组生成一个。</p>
+              </div>
+              <label class="inline-check">
+                <input type="checkbox" id="wizardFollowHuman" checked />
+                <span>AI 队友等真人行动后再回应（推荐）</span>
+              </label>
+              <div class="wizard-summary" id="wizardSummary"></div>
+            </div>
+            <div class="button-row wizard-actions">
+              <button class="ghost-button" type="button" data-wizard-prev="2"><i data-lucide="arrow-left"></i><span>上一步</span></button>
+              <button class="primary-button" type="button" id="startCampaignWizardButton"><i data-lucide="play"></i><span>开始战役</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay coc-sheet-overlay" id="cocSheetOverlay" hidden aria-label="CoC 调查员卡">
+        <div class="content-library-shell coc-sheet-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">CoC 7e</span>
+              <h2>调查员卡</h2>
+              <p class="section-kicker">完整属性、年龄修正、职业、技能点、衍生数值和背景。技能基础值来自公开数据，职业模板可扩展。</p>
+            </div>
+            <button class="icon-button" type="button" id="cocMaximizeButton" title="最大化 / 还原"><i data-lucide="maximize-2"></i></button>
+            <button class="icon-button" type="button" id="closeCocSheetButton" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+          <div class="coc-sheet-toolbar">
+            <label><span>姓名</span><input id="cocName" type="text" maxlength="40" /></label>
+            <label><span>年龄</span><input id="cocAge" type="number" min="15" max="90" value="30" /></label>
+            <label><span>性别</span><input id="cocSex" type="text" maxlength="20" /></label>
+            <label><span>职业</span><select id="cocOccupation"></select></label>
+            <label><span>居住地</span><input id="cocResidence" type="text" maxlength="60" /></label>
+            <label><span>出生地</span><input id="cocBirthplace" type="text" maxlength="60" /></label>
+            <div class="button-row tight">
+              <button type="button" class="ghost-button" id="cocRollSets"><i data-lucide="dices"></i><span>一次生成 5 组属性</span></button>
+              <button type="button" class="ghost-button" id="cocApplyOccupation"><i data-lucide="briefcase"></i><span>应用职业</span></button>
+              <button type="button" class="primary-button" id="cocSaveCharacter"><i data-lucide="save"></i><span>保存角色</span></button>
+            </div>
+          </div>
+          <p class="field-hint" id="cocSheetStatus">先掷属性，再选职业分配技能点。</p>
+          <div class="coc-sheet-layout">
+            <section class="coc-sheet-column">
+              <h3>属性</h3>
+              <div id="cocCharacteristics" class="coc-characteristics"></div>
+              <details class="coc-attribute-reference">
+                <summary>属性数值参考（普通人类 / 超越人类）</summary>
+                <div id="cocAttributeReferenceBody"></div>
+              </details>
+              <div id="cocAttributeSets" class="coc-attribute-sets"></div>
+              <div id="cocDerived" class="coc-derived"></div>
+              <h3>背景</h3>
+              <div id="cocBackground" class="coc-background"></div>
+              <label><span>装备 / 物品（每行一项）</span><textarea id="cocEquipment" rows="5"></textarea></label>
+              <label><span>现金 / 资产</span><input id="cocCash" type="text" /></label>
+            </section>
+            <section class="coc-sheet-column coc-skills-column">
+              <div class="coc-skill-heading">
+                <h3>技能</h3>
+                <input id="cocSkillSearch" type="search" placeholder="搜索技能…" />
+              </div>
+              <div class="coc-points" id="cocPoints"></div>
+              <div class="coc-skill-list" id="cocSkills"></div>
+            </section>
+          </div>
+          <div class="coc-sheet-footer">
+            <span id="cocFooterStatus">填写完成后点保存；保存会写入角色库。</span>
+            <div class="button-row tight">
+              <button type="button" class="ghost-button" id="closeCocSheetFooterButton">关闭</button>
+              <button type="button" class="primary-button" id="cocSaveCharacterFooter"><i data-lucide="save"></i><span>保存角色</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay coc-sheet-overlay" id="dndSheetOverlay" hidden aria-label="D&D 5e 角色卡">
+        <div class="content-library-shell coc-sheet-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">D&D 5e SRD</span>
+              <h2>角色卡</h2>
+              <p class="section-kicker">种族、职业、背景、属性生成、熟练、HP/AC/先攻/豁免和施法基础。使用 SRD 5.1 开放数据。</p>
+            </div>
+            <button class="icon-button" type="button" id="dndMaximizeButton" title="最大化 / 还原"><i data-lucide="maximize-2"></i></button>
+            <button class="icon-button" type="button" id="closeDndSheetButton" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+          <div class="coc-sheet-toolbar">
+            <label><span>姓名</span><input id="dndName" type="text" maxlength="40" /></label>
+            <label><span>等级</span><input id="dndLevel" type="number" min="1" max="20" value="1" /></label>
+            <label><span>种族</span><select id="dndRace"></select></label>
+            <label><span>职业</span><select id="dndClass"></select></label>
+            <label><span>子职</span><select id="dndSubclass"></select></label>
+            <label><span>背景</span><select id="dndBackground"></select></label>
+            <label><span>阵营</span><select id="dndAlignment"></select></label>
+            <div class="button-row tight">
+              <button type="button" class="ghost-button" id="dndRollAbilities"><i data-lucide="dices"></i><span>4d6 掷属性</span></button>
+              <button type="button" class="ghost-button" id="dndStandardArray"><i data-lucide="list-ordered"></i><span>标准数组</span></button>
+              <button type="button" class="ghost-button" id="dndPointBuy"><i data-lucide="coins"></i><span>点买 27</span></button>
+              <button type="button" class="primary-button" id="dndSaveCharacter"><i data-lucide="save"></i><span>保存角色</span></button>
+            </div>
+          </div>
+          <p class="field-hint" id="dndSheetStatus">属性 = 基础值 + 种族加值；技能熟练来自职业和背景。</p>
+          <div class="coc-sheet-layout">
+            <section class="coc-sheet-column">
+              <h3>属性</h3>
+              <div id="dndAbilities" class="coc-characteristics"></div>
+              <div id="dndDerived" class="coc-derived"></div>
+              <div id="dndSaves" class="coc-derived"></div>
+              <label><span>护甲</span><select id="dndArmor"></select></label>
+              <label class="inline-check"><input id="dndShield" type="checkbox" /><span>持盾（AC +2）</span></label>
+              <label><span>武器</span><select id="dndWeapon"></select></label>
+              <div id="dndAttack" class="coc-derived"></div>
+              <div id="dndSpellStats" class="coc-derived"></div>
+            </section>
+            <section class="coc-sheet-column coc-skills-column">
+              <div class="coc-skill-heading">
+                <h3>技能</h3>
+                <input id="dndSkillSearch" type="search" placeholder="搜索技能…" />
+              </div>
+              <div class="coc-points" id="dndSkillPoints"></div>
+              <div class="coc-skill-list" id="dndSkills"></div>
+              <label><span>法术 / 戏法（每行一项）</span><textarea id="dndSpells" rows="5" placeholder="戏法：火焰箭&#10;1 环：魔法飞弹"></textarea></label>
+            </section>
+            <section class="coc-sheet-column">
+              <h3>背景</h3>
+              <div id="dndBackgroundFields" class="coc-background"></div>
+              <label><span>装备 / 物品（每行一项）</span><textarea id="dndEquipment" rows="6"></textarea></label>
+              <label><span>金币 / 资产</span><input id="dndGold" type="text" /></label>
+              <label><span>职业特性 / 备注</span><textarea id="dndNotes" rows="4"></textarea></label>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section class="rule-library-overlay" id="ruleLibraryOverlay" hidden aria-label="规则库">        <div class="rule-library-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">规则库</span>
+              <h2>查看与编辑跑团规则</h2>
+              <p class="section-kicker">内置规则来自参考项目的规则提示包；自定义规则会保存在当前设备。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeRuleLibraryButton" title="关闭规则库">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="rule-library-layout">
+            <div class="rule-library-list" id="ruleLibraryList"></div>
+            <form id="ruleLibraryForm" class="stack-form editor-form rule-library-editor">
+              <input name="id" type="hidden" />
+              <div class="rule-library-editor-title">
+                <div>
+                  <span class="eyebrow">当前规则</span>
+                  <h3 id="ruleLibraryEditorTitle">规则详情</h3>
+                </div>
+                <span class="status-pill" id="ruleLibrarySource"></span>
+              </div>
+              <label><span>规则名称</span><input name="label" type="text" autocomplete="off" /></label>
+              <div class="form-grid two">
+                <label><span>骰面</span><input name="diceSides" type="number" min="2" max="1000" /></label>
+                <label><span>判定方式</span><select name="checkMode"><option value="under">低于等于目标成功</option><option value="over">高于等于目标成功</option></select></label>
+              </div>
+              <div class="form-grid two">
+                <label><span>大成功阈值</span><input name="critical" type="number" min="1" max="1000" /></label>
+                <label><span>大失败阈值</span><input name="fumble" type="number" min="1" max="1000" /></label>
+              </div>
+              <div class="form-grid two">
+                <label><span>压力上限</span><input name="pressureMax" type="number" min="1" max="99" /></label>
+                <label><span>默认修正</span><input name="defaultModifier" type="number" min="-1000" max="1000" /></label>
+              </div>
+              <label><span>状态名称（生命 / 资源 / 压力）</span><input name="statusLabels" type="text" placeholder="生命, 技能点, 压力" /></label>
+              <label><span>技能列表</span><textarea name="skills" rows="4"></textarea></label>
+              <label><span>规则说明</span><textarea name="ruleSummary" rows="3"></textarea></label>
+              <label><span>AI 主持风格</span><textarea name="aiStyle" rows="3"></textarea></label>
+              <div class="button-row">
+                <button class="primary-button" type="submit"><i data-lucide="save"></i><span>保存自定义规则</span></button>
+                <button class="ghost-button" type="button" id="useRuleLibraryButton"><i data-lucide="check"></i><span>应用到当前世界</span></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay" id="contentLibraryOverlay" hidden aria-label="世界观库">
+        <div class="content-library-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">世界观库</span>
+              <h2>管理世界观与 AI 主持边界</h2>
+              <p class="section-kicker">世界观决定时代、氛围、玩家身份范围和主持边界；模组与剧本在独立的模组库中管理。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeContentLibraryButton" title="关闭">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="content-library-layout">
+            <div class="content-library-sidebar">
+              <div class="section-heading compact"><h3>世界观模板</h3></div>
+              <div class="content-library-list" id="worldProfileList"></div>
+            </div>
+            <div class="content-library-main">
+              <form id="worldProfileForm" class="stack-form editor-form">
+                <input name="id" type="hidden" />
+                <div class="section-heading compact">
+                  <div><span class="eyebrow">当前世界观</span><h3 id="worldProfileEditorTitle">世界观详情</h3></div>
+                  <span class="status-pill" id="worldProfileSource"></span>
+                </div>
+                <label><span>名称</span><input name="title" type="text" autocomplete="off" /></label>
+                <div class="form-grid two">
+                  <label><span>时代</span><input name="era" type="text" autocomplete="off" /></label>
+                  <label><span>类型</span><input name="genre" type="text" autocomplete="off" /></label>
+                </div>
+                <label><span>世界背景与空间范围</span><textarea name="setting" rows="3"></textarea></label>
+                <label><span>核心冲突</span><textarea name="coreConflict" rows="2"></textarea></label>
+                <label><span>氛围与叙事质感</span><textarea name="atmosphere" rows="2"></textarea></label>
+                <label><span>玩家通常扮演什么角色</span><textarea name="playerRole" rows="2"></textarea></label>
+                <label><span>禁止事项 / 世界边界</span><textarea name="taboos" rows="3"></textarea></label>
+                <label><span>AI 主持风格</span><textarea name="aiStyle" rows="3"></textarea></label>
+                <div class="button-row">
+                  <button class="primary-button" type="submit"><i data-lucide="save"></i><span>保存并应用世界观</span></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay module-library-overlay" id="moduleLibraryOverlay" hidden aria-label="模组库">
+        <div class="content-library-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">模组库</span>
+              <h2>管理剧本、章节与模组组件</h2>
+              <p class="section-kicker">模组独立于世界观保存。一个世界观可以搭配不同规则和剧本，也可以在开房间时重新选择。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeModuleLibraryButton" title="关闭">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="content-library-layout">
+            <div class="content-library-sidebar">
+              <div class="section-heading compact">
+                <h3>已保存模组</h3>
+                <button class="ghost-button compact-select danger-button" type="button" id="clearImportedModulesButton" title="清空全部模组（不是删除当前）"><i data-lucide="trash-2"></i><span>清空全部</span></button>
+              </div>
+              <div class="content-library-list" id="moduleLibraryList"></div>
+            </div>
+            <div class="content-library-main">
+              <section class="module-import-panel">
+                <div class="section-heading compact">
+                  <div><span class="eyebrow">模组导入</span><h3>从文本或文件生成模组组件</h3></div>
+                  <span class="status-pill" id="moduleImportStatus">等待文本</span>
+                </div>
+                <label><span>模组文本 / Markdown / AI 导出的 JSON</span><textarea id="moduleImportText" rows="10" placeholder="可以粘贴模组简介、章节、NPC、技能、道具、地点和剧情流程。"></textarea></label>
+                <div class="button-row">
+                  <button class="primary-button" type="button" id="moduleImportFileTrigger"><i data-lucide="file-up"></i><span>选择模组文件</span></button>
+                  <button class="primary-button" type="button" id="directModuleFileTrigger"><i data-lucide="zap"></i><span>选择文件并直接解析</span></button>
+                  <button class="ghost-button" type="button" id="parseModuleTextButton"><i data-lucide="wand-sparkles"></i><span>解析并生成模组</span></button>
+                  <button class="ghost-button" type="button" id="aiParseModuleTextButton"><i data-lucide="bot"></i><span>AI 解析生成模组</span></button>
+                  <button class="ghost-button" type="button" id="forceModuleReparseButton" title="忽略缓存，重新调用 AI"><i data-lucide="refresh-cw"></i><span>强制重解析</span></button>
+                  <button class="ghost-button" type="button" id="applyImportedModuleButton" disabled><i data-lucide="download"></i><span>应用最近模组</span></button>
+                </div>
+                <input id="moduleImportFile" type="file" accept=".txt,.md,.markdown,.json,.docx,.pdf,text/plain,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" hidden />
+                <input id="directModuleFile" type="file" accept=".txt,.md,.markdown,.json,.docx,.pdf,text/plain,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" hidden />
+                <p class="field-hint">支持 TXT、Markdown、JSON、DOCX、PDF。普通读取会显示提取字数；“直接解析”会把文件文字直接交给 AI，不经过文本框。长模组会自动分段；扫描版 PDF 提取不到文字时会明确提示。</p>
+                <div class="module-import-preview" id="moduleImportPreview"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay" id="moduleEditorOverlay" hidden aria-label="编辑模组">
+        <div class="content-library-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">模组编辑</span>
+              <h2>预览与修改</h2>
+              <p class="section-kicker">可视化编辑章节、线索和 NPC；高级字段仍可在 JSON 里改。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeModuleEditorButton" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+          <label><span>模组标题</span><input id="moduleEditorTitle" type="text" maxlength="200" /></label>
+          <label><span>模组简介</span><textarea id="moduleEditorDescription" rows="3"></textarea></label>
+          <div class="module-editor-structure">
+            <div class="module-editor-section-head"><h3>章节</h3><button type="button" class="ghost-button compact-select" id="addModuleChapterButton"><i data-lucide="plus"></i><span>添加章节</span></button></div>
+            <div id="moduleEditorChapters" class="module-editor-list"></div>
+            <div class="module-editor-section-head"><h3>线索</h3><button type="button" class="ghost-button compact-select" id="addModuleClueButton"><i data-lucide="plus"></i><span>添加线索</span></button></div>
+            <div id="moduleEditorClues" class="module-editor-list"></div>
+            <div class="module-editor-section-head"><h3>NPC</h3><button type="button" class="ghost-button compact-select" id="addModuleNpcButton"><i data-lucide="plus"></i><span>添加 NPC</span></button></div>
+            <div id="moduleEditorNpcs" class="module-editor-list"></div>
+          </div>
+          <details class="module-editor-json">
+            <summary>高级：完整 JSON（章节、场景、NPC、线索、道具等）</summary>
+            <textarea id="moduleEditorJson" rows="18" spellcheck="false"></textarea>
+          </details>
+          <p class="field-hint" id="moduleEditorStatus">修改后点保存；JSON 必须保持合法格式。</p>
+          <div class="button-row">
+            <button class="primary-button" type="button" id="saveModuleEditorButton"><i data-lucide="save"></i><span>保存模组</span></button>
+            <button class="ghost-button" type="button" id="deleteModuleEditorButton"><i data-lucide="trash"></i><span>删除此模组</span></button>
+          </div>
+        </div>
+      </section>
+      <section class="content-library-overlay" id="savesOverlay" hidden aria-label="存档管理">
+        <div class="content-library-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">存档</span>
+              <h2>保存与恢复跑团进度</h2>
+              <p class="section-kicker">存档保存在本机后端，换端口、换浏览器或重开设备后仍可恢复。自动存档只保留最近一次。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeSavesButton" title="关闭">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="saves-toolbar">
+            <label>
+              <span>存档名称</span>
+              <input id="saveNameInput" type="text" maxlength="120" placeholder="例如：雾港档案 · 第一章" />
+            </label>
+            <div class="button-row tight">
+              <button class="primary-button" id="saveCampaignButton" type="button">
+                <i data-lucide="save"></i><span>保存当前进度</span>
+              </button>
+              <button class="ghost-button" id="refreshSavesButton" type="button">
+                <i data-lucide="refresh-cw"></i><span>刷新</span>
+              </button>
+            </div>
+          </div>
+          <p class="field-hint" id="savesStatus">自动存档会在游戏过程中定期更新；手动存档可以留多个节点。</p>
+          <div id="savesList" class="saves-list"></div>
+        </div>
+      </section>
+      <section class="content-library-overlay ai-settings-overlay" id="aiSettingsOverlay" hidden aria-label="AI 主持设置">
+        <div class="content-library-shell ai-settings-shell">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">AI 主持设置</span>
+              <h2>接口、模型与主持指令</h2>
+              <p class="section-kicker">API Key 保存在本机服务端（ai_config.json），不会发送到浏览器或同步到房间。AI 只托管主持人，不代替玩家行动。</p>
+            </div>
+            <button class="icon-button" type="button" id="closeAiSettingsButton" title="关闭">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <form id="aiForm" class="stack-form editor-form no-border ai-settings-form">
+            <label>
+              <span>接口地址</span>
+              <input name="endpoint" type="text" autocomplete="off" />
+            </label>
+            <div class="form-grid two">
+              <label>
+                <span>模型</span>
+                <input name="model" type="text" autocomplete="off" placeholder="deepseek-flash / deepseek-v4-pro" />
+              </label>
+              <label>
+                <span>温度</span>
+                <input name="temperature" type="number" min="0" max="2" step="0.1" />
+              </label>
+            </div>
+            <label>
+              <span>API Key</span>
+              <input name="apiKey" type="password" autocomplete="off" placeholder="留空表示沿用服务端已保存的密钥" />
+            </label>
+            <p class="field-hint" id="aiKeyHint">正在读取服务端配置…</p>
+            <label>
+              <span>主持指令 / 文风约束</span>
+              <textarea name="customInstructions" rows="8" placeholder="例如：不要替玩家行动；关键处停下来；少用比喻；每回合推进时间或局势。"></textarea>
+            </label>
+            <div class="button-row">
+              <button class="primary-button" type="button" id="saveAiButton"><i data-lucide="save"></i><span>保存 AI 设置</span></button>
+              <button class="ghost-button" type="button" id="testAiButton"><i data-lucide="plug-zap"></i><span>测试连接</span></button>
+              <span class="status-pill" id="aiTestStatus">未测试</span>
+            </div>
+          </form>
+        </div>
+      </section>
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><img src="lighthouse.svg" alt="" /></div>
+          <div>
+            <h1>幕灯</h1>
+            <p id="campaignSubtitle">本地战役</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="status-pill" id="accountBadge" title="访客账户">访客账户加载中</span>
+          <div class="view-switch" aria-label="视角切换">
+            <button class="view-button active" type="button" data-view-mode="gm" title="主持人视角">
+              <i data-lucide="screen-share"></i>
+              <span>主持</span>
+            </button>
+            <button class="view-button" type="button" data-view-mode="player" title="玩家视角">
+              <i data-lucide="users"></i>
+              <span>玩家</span>
+            </button>
+          </div>
+          <div class="top-player-select" title="玩家视角身份">
+            <span>身份</span>
+            <input id="playerViewActor" type="hidden" />
+            <button class="identity-menu-button" id="playerViewActorButton" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="playerViewActorLabel">未选择</span>
+              <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="identity-menu" id="playerViewActorMenu" role="listbox" hidden></div>
+          </div>
+          <button class="ghost-button" id="hardRefreshButton" title="清理当前浏览器缓存数据并重新载入">
+            <i data-lucide="refresh-cw"></i>
+            <span>刷新应用</span>
+          </button>
+          <button class="ghost-button" id="roomButton" title="连接多人房间">
+            <i data-lucide="radio"></i>
+            <span>联网房间</span>
+          </button>
+          <button class="ghost-button" id="homeButton" title="返回首页">
+            <i data-lucide="home"></i>
+            <span>首页</span>
+          </button>
+          <div class="settings-menu-wrap">
+            <button class="ghost-button" id="settingsMenuButton" type="button" aria-expanded="false" aria-controls="settingsMenu">
+              <i data-lucide="settings-2"></i>
+              <span>设置</span>
+            </button>
+            <div class="settings-menu" id="settingsMenu" hidden>
+              <button class="settings-menu-item" id="savesButton" type="button"><i data-lucide="archive"></i><span>存档管理</span></button>
+              <button class="settings-menu-item" id="importTrigger" type="button"><i data-lucide="upload"></i><span>导入存档</span></button>
+              <button class="settings-menu-item" id="exportButton" type="button"><i data-lucide="download"></i><span>导出存档</span></button>
+              <button class="settings-menu-item" id="exportTranscriptButton" type="button"><i data-lucide="file-text"></i><span>导出跑团记录</span></button>
+              <button class="settings-menu-item" id="accountSettingsButton" type="button"><i data-lucide="key-round"></i><span>账户与恢复码</span></button>
+              <button class="settings-menu-item" id="ruleLibraryButton" type="button"><i data-lucide="book-open"></i><span>规则库</span></button>
+              <button class="settings-menu-item" id="contentLibraryButton" type="button"><i data-lucide="globe-2"></i><span>世界观库</span></button>
+              <button class="settings-menu-item" id="moduleLibraryButton" type="button"><i data-lucide="library-big"></i><span>模组库</span></button>
+              <button class="settings-menu-item" id="aiSettingsButton" type="button"><i data-lucide="bot"></i><span>AI 接口设置</span></button>
+              <button class="settings-menu-item" id="uiSmokeTestButton" type="button"><i data-lucide="scan-search"></i><span>界面自检</span></button>
+              <button class="settings-menu-item theme-toggle-button" id="themeToggleButton" type="button"><i data-lucide="moon"></i><span>夜间模式</span></button>
+              <button class="settings-menu-item danger-menu-item" id="resetButton" type="button"><i data-lucide="rotate-ccw"></i><span>重置本地数据</span></button>
+            </div>
+          </div>
+          <input id="importFile" type="file" accept="application/json" hidden />
+        </div>
+      </header>
+      <div class="app-error-banner" id="appErrorBanner" hidden></div>
+      <section class="room-presence" id="roomPresenceBar" hidden>
+        <div class="room-presence-main">
+          <span class="eyebrow">当前房间</span>
+          <strong id="roomPresenceCode">—</strong>
+          <span id="roomPresenceName">未命名房间</span>
+          <span id="roomPresenceCampaign">存档未载入</span>
+        </div>
+        <div class="room-presence-meta">
+          <span class="status-pill" id="roomPresenceRole">玩家</span>
+          <span class="status-pill" id="roomPresenceOnline">0 人在线</span>
+          <span class="status-pill" id="roomPresenceStatus">连接中</span>
+        </div>
+        <div class="button-row tight">
+          <button class="ghost-button compact-select" type="button" id="roomPresenceInfo"><i data-lucide="panel-left"></i><span>房间信息</span></button>
+          <button class="ghost-button compact-select" type="button" id="roomPresenceLeave"><i data-lucide="log-out"></i><span>离开</span></button>
+        </div>
+      </section>
+      <div class="room-restore-banner" id="roomRestoreBanner" hidden>正在恢复当前房间存档…</div>
+      <section class="room-panel" id="roomPanel" hidden>
+        <div class="room-panel-head">
+          <div>
+            <span class="eyebrow">多人房间</span>
+            <h2>连接朋友一起游玩</h2>
+          </div>
+          <button class="icon-button" id="closeRoomButton" type="button" title="关闭">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="room-status" id="roomStatus">尚未连接房间。当前仍使用本地存档。</div>
+        <div class="device-status" id="deviceStatus"></div>
+        <div class="room-entry-tabs" id="roomEntryTabs">
+          <div>
+            <strong>进入房间</strong>
+            <span>先选择你的身份，再选择角色。</span>
+          </div>
+          <div class="button-row tight">
+            <button class="ghost-button compact-select active" type="button" data-room-entry-mode="player"><i data-lucide="users"></i><span>我是玩家</span></button>
+            <button class="ghost-button compact-select" type="button" data-room-entry-mode="host"><i data-lucide="screen-share"></i><span>我是主持人</span></button>
+          </div>
+        </div>
+        <div class="room-network" id="roomNetworkPanel">
+          <div class="room-network-row"><span>本机地址</span><strong id="roomLocalUrl">—</strong></div>
+          <div class="room-network-row"><span>局域网地址</span><strong id="roomLanUrl">未启用联机监听</strong></div>
+          <label><span>邀请地址</span><select id="roomInviteBase"></select></label>
+          <label><span>手动地址（Tailscale / 域名）</span><input id="roomInviteBaseCustom" type="text" placeholder="http://100.x.x.x:8000" /></label>
+          <div class="button-row tight">
+            <button class="ghost-button compact-select" type="button" id="applyRoomInviteBaseCustom">使用手动地址</button>
+          </div>
+          <label><span>邀请链接</span><input id="roomInviteUrl" type="text" readonly placeholder="连接房间后生成" /></label>
+          <div class="button-row tight">
+            <button class="ghost-button" type="button" id="copyRoomInviteButton"><i data-lucide="copy"></i><span>复制邀请链接</span></button>
+            <button class="ghost-button" type="button" id="refreshNetworkButton"><i data-lucide="refresh-cw"></i><span>刷新地址</span></button>
+          </div>
+          <p class="field-hint" id="roomNetworkHint">同一虚拟局域网/Tailscale/ZeroTier 下，用局域网地址访问即可联机。</p>
+        </div>
+        <section class="room-history" id="roomHistory" hidden>
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">最近房间</span>
+              <h3>回到之前加入的房间</h3>
+            </div>
+          </div>
+          <div id="roomHistoryList"></div>
+        </section>
+        <div class="room-actions">
+          <form id="createRoomForm" class="room-form">
+            <h3>主持人创建房间</h3>
+            <label>
+              <span>战役名称</span>
+              <input name="name" type="text" value="我的跑团" autocomplete="off" />
+            </label>
+            <label>
+              <span>主持人名称</span>
+              <input name="hostName" type="text" value="主持人" autocomplete="off" />
+            </label>
+            <button class="primary-button" type="submit">
+              <i data-lucide="plus-circle"></i>
+              <span>创建房间</span>
+            </button>
+          </form>
+          <form id="joinRoomForm" class="room-form">
+            <h3>玩家加入房间</h3>
+            <label>
+              <span>房间代码</span>
+              <input name="roomId" type="text" maxlength="6" placeholder="例如 ABC123" autocomplete="off" />
+            </label>
+            <label>
+              <span>玩家名称</span>
+              <input name="name" type="text" value="玩家" autocomplete="off" />
+            </label>
+            <label>
+              <span>控制角色</span>
+              <select name="playerId" id="joinPlayerId"></select>
+            </label>
+            <label>
+              <span>本设备角色</span>
+              <select name="characterId" id="joinCharacterId"></select>
+            </label>
+            <p class="field-hint" id="joinRoomHint">选择角色后加入；没有角色也可以先加入，稍后再绑定。</p>
+            <button class="primary-button" id="joinRoomButton" type="submit">
+              <i data-lucide="log-in"></i>
+              <span>加入房间</span>
+            </button>
+          </form>
+        </div>
+        <div class="room-connected" id="roomConnected" hidden>
+          <span id="roomConnectedText"></span>
+          <button class="ghost-button" id="copyRoomCodeButton" type="button">
+            <i data-lucide="copy"></i>
+            <span>复制房间代码</span>
+          </button>
+          <button class="ghost-button" id="recoverGmRoomButton" type="button" title="如果误进了玩家身份，恢复到这个房间的主持身份">
+            <i data-lucide="shield-check"></i>
+            <span>恢复主持身份</span>
+          </button>
+          <button class="danger-button" id="leaveRoomButton" type="button">
+            <i data-lucide="log-out"></i>
+            <span>断开房间</span>
+          </button>
+        </div>
+        <section class="room-character-switch" id="roomCharacterSwitch" hidden>
+          <div class="section-heading">
+            <div>
+              <h3>我的房间角色</h3>
+              <p class="section-kicker" id="roomCharacterCurrent">当前角色：—</p>
+            </div>
+            <span class="status-pill">本设备角色</span>
+          </div>
+          <div class="room-character-switch-row">
+            <select id="roomSwitchCharacter"></select>
+            <button class="primary-button" type="button" id="roomSwitchCharacterButton"><i data-lucide="repeat-2"></i><span>使用此角色</span></button>
+          </div>
+          <p class="field-hint" id="roomSwitchStatus">创建新角色后，在这里切换房间内的参战副本。</p>
+        </section>
+        <section class="room-snapshot-section" id="roomSnapshotSection" hidden>
+          <div class="section-heading">
+            <div>
+              <h3>房间快照 / 回滚</h3>
+              <p class="section-kicker">每次状态变更自动保留最近 24 个快照。</p>
+            </div>
+            <button class="ghost-button compact-select" type="button" id="refreshRoomSnapshotsButton"><i data-lucide="refresh-cw"></i><span>刷新</span></button>
+          </div>
+          <div class="room-snapshot-list" id="roomSnapshotList"></div>
+          <p class="field-hint" id="roomSnapshotStatus">主持人可以回滚到之前的房间状态。</p>
+        </section>
+        <section class="room-members-section" id="roomMembersSection" hidden>
+          <section class="action-request-section" id="actionRequestSection" hidden>
+            <div class="section-heading">
+              <h2>行动请求</h2>
+              <span class="status-pill" id="actionRequestCount">0 待处理</span>
+            </div>
+            <div class="action-request-list" id="actionRequestList"></div>
+          </section>
+
+          <div class="section-heading">
+            <h3>房间成员</h3>
+            <span class="status-pill" id="roomMemberCount">0 人</span>
+          </div>
+          <div class="room-members-list" id="roomMembersList"></div>
+        </section>
+      </section>
+
+      <main class="workspace" id="gmWorkspace">
+        <aside class="host-left-panel" id="hostLeftPanel" aria-label="AI 指挥台">
+          <div class="hlp-head">
+            <div>
+              <span class="eyebrow">AI 指挥台</span>
+              <strong id="hlpStatus">未开启</strong>
+            </div>
+            <span class="status-pill" id="hlpQueue">队列 0</span>
+          </div>
+          <div class="hlp-slot" id="hlpAiSlot"></div>
+          <details class="hlp-intel" id="hlpClueBlock" open>
+            <summary><span class="hlp-intel-title">线索</span><span class="hlp-intel-meta" id="hlpClueCount">0 条</span></summary>
+            <div class="hlp-intel-body" id="hlpClueList"></div>
+          </details>
+          <details class="hlp-intel" id="hlpSceneBlock">
+            <summary><span class="hlp-intel-title">场景</span><span class="hlp-intel-meta" id="hlpSceneMeta"></span></summary>
+            <div class="hlp-intel-body" id="hlpSceneBody"></div>
+          </details>
+          <details class="hlp-intel" id="hlpMapBlock">
+            <summary><span class="hlp-intel-title">地图</span><span class="hlp-intel-meta" id="hlpMapMeta"></span></summary>
+            <div class="hlp-intel-body" id="hlpMapBody"></div>
+          </details>
+        </aside>
+        <aside class="host-tool-rail" aria-label="主持工具">
+          <button type="button" class="host-tool-button" data-host-scroll="playFlowPanel" title="开场"><i data-lucide="play"></i><span>开场</span></button>
+          <button type="button" class="host-tool-button" data-host-scroll="actionForm" title="行动"><i data-lucide="dice-5"></i><span>行动</span></button>
+          <button type="button" class="host-tool-button" data-host-drawer="ai" title="AI 玩家"><i data-lucide="bot"></i><span>AI</span></button>
+          <button type="button" class="host-tool-button" data-host-drawer="director" title="导演面板"><i data-lucide="clapperboard"></i><span>导演</span></button>
+          <button type="button" class="host-tool-button" data-host-drawer="saves" title="即时存档"><i data-lucide="save"></i><span>存档</span></button>
+          <button type="button" class="host-tool-button" data-host-scroll="combatMapSection" title="战斗地图"><i data-lucide="map"></i><span>地图</span></button>
+          <button type="button" class="host-tool-button" data-host-scroll="turnSection" title="回合顺序"><i data-lucide="list-ordered"></i><span>战斗</span></button>
+          <button type="button" class="host-tool-button" data-host-scroll="gameLogSection" title="游戏日志"><i data-lucide="scroll-text"></i><span>日志</span></button>
+          <button type="button" class="host-tool-button" data-host-scroll="gmChatPanel" title="游玩聊天"><i data-lucide="messages-square"></i><span>聊天</span></button>
+          <button type="button" class="host-tool-button" data-host-drawer="library" title="资料库"><i data-lucide="library"></i><span>资料</span></button>
+        </aside>
+        <div class="host-drawer-backdrop" id="hostDrawerBackdrop" hidden></div>
+        <aside class="host-drawer" id="hostDrawer" hidden aria-label="主持侧边栏">
+          <div class="host-drawer-head">
+            <strong id="hostDrawerTitle">AI 玩家</strong>
+            <button type="button" class="icon-button" id="closeHostDrawerButton" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+          <div class="host-drawer-body" id="hostDrawerBody">
+            <section class="director-panel" id="directorPanel" hidden>
+              <p class="field-hint">不用滚回主面板，直接推进焦点、时间、线索和 NPC。</p>
+              <div class="director-block">
+                <label><span>当前焦点</span><textarea id="directorFocus" rows="2"></textarea></label>
+                <button type="button" class="ghost-button compact-select" id="directorApplyFocus">更新焦点</button>
+              </div>
+              <div class="director-block director-inline">
+                <label><span>局内时间</span><input id="directorTime" type="text" /></label>
+                <button type="button" class="ghost-button compact-select" id="directorApplyTime">设置时间</button>
+              </div>
+              <div class="director-block">
+                <label><span>公开发布</span><textarea id="directorPublicText" rows="2" placeholder="玩家会立即在聊天里看到"></textarea></label>
+                <button type="button" class="primary-button compact-select" id="directorPublishText">发布叙述</button>
+              </div>
+              <div class="director-block">
+                <label><span>主持秘密</span><textarea id="directorSecretText" rows="2" placeholder="只写入日志，不发给玩家"></textarea></label>
+                <button type="button" class="ghost-button compact-select" id="directorLogSecret">记录秘密</button>
+              </div>
+              <details class="director-details">
+                <summary>发布线索</summary>
+                <label><span>标题</span><input id="directorClueTitle" type="text" /></label>
+                <label><span>内容</span><textarea id="directorClueText" rows="2"></textarea></label>
+                <button type="button" class="ghost-button compact-select" id="directorAddClue">发布线索卡</button>
+              </details>
+              <details class="director-details">
+                <summary>添加 NPC</summary>
+                <label><span>姓名</span><input id="directorNpcName" type="text" /></label>
+                <label><span>定位 / 关系</span><input id="directorNpcRole" type="text" /></label>
+                <label><span>目标 / 秘密</span><textarea id="directorNpcGoal" rows="2"></textarea></label>
+                <button type="button" class="ghost-button compact-select" id="directorAddNpc">添加 NPC</button>
+              </details>
+              <details class="director-details">
+                <summary>调整玩家状态</summary>
+                <label><span>玩家</span><select id="directorPlayerSelect"></select></label>
+                <div class="director-inline">
+                  <label><span>生命值</span><input id="directorPlayerHp" type="number" min="0" max="999" /></label>
+                  <button type="button" class="ghost-button compact-select" id="directorApplyHp">更新生命</button>
+                </div>
+                <label><span>状态</span><input id="directorPlayerConditions" type="text" placeholder="例如：受伤、被跟踪" /></label>
+                <button type="button" class="ghost-button compact-select" id="directorApplyConditions">更新状态</button>
+              </details>
+              <details class="director-details" id="directorMemoryDetails">
+                <summary>长团记忆 / 前情提要</summary>
+                <div class="button-row tight">
+                  <button type="button" class="ghost-button compact-select" id="directorGenerateSummary"><i data-lucide="notebook-pen"></i><span>生成阶段摘要</span></button>
+                  <button type="button" class="primary-button compact-select" id="directorPostRecap"><i data-lucide="book-open"></i><span>发布前情提要</span></button>
+                </div>
+                <label><span>新剧情线</span><input id="directorThreadTitle" type="text" placeholder="例如：找到林澈留下的铁箱" /></label>
+                <label><span>说明</span><textarea id="directorThreadDetail" rows="2" placeholder="未解问题、相关人物或下一步"></textarea></label>
+                <button type="button" class="ghost-button compact-select" id="directorAddThread"><i data-lucide="plus"></i><span>添加剧情线</span></button>
+                <div class="director-memory-list" id="directorMemoryList"></div>
+                <div class="director-thread-list" id="directorThreadList"></div>
+              </details>
+              <details class="director-details" id="directorNpcKnowledgeDetails">
+                <summary>NPC 知识边界</summary>
+                <label><span>NPC</span><select id="directorKnowledgeNpc"></select></label>
+                <label><span>知道什么（每行一条）</span><textarea id="directorKnowledgeKnown" rows="3" placeholder="亲眼见过、亲耳听过或合理推断出的事实"></textarea></label>
+                <label><span>不知道 / 不能泄露（每行一条）</span><textarea id="directorKnowledgeIgnorance" rows="3" placeholder="AI 不能借这个 NPC 之口说出这些内容"></textarea></label>
+                <button type="button" class="primary-button compact-select" id="directorSaveKnowledge"><i data-lucide="save"></i><span>保存知识边界</span></button>
+              </details>
+              <p class="field-hint" id="directorStatus">导演操作会立即写入当前存档。</p>
+            </section>
+          </div>
+        </aside>
+        <section class="panel scene-panel" id="scenePanel" aria-label="场景与规则" hidden>
+          <div class="panel-heading">
+            <h2>当前局势</h2>
+            <button class="icon-button" id="saveSessionButton" title="保存局势">
+              <i data-lucide="save"></i>
+            </button>
+          </div>
+
+          <form id="sessionForm" class="stack-form">
+            <label>
+              <span>战役</span>
+              <input name="campaign" type="text" autocomplete="off" />
+            </label>
+            <div class="form-grid two">
+              <label>
+                <span>章节</span>
+                <input name="chapter" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>局内时间</span>
+                <input name="inGameTime" type="text" autocomplete="off" />
+              </label>
+            </div>
+            <label>
+              <span>当前焦点</span>
+              <textarea name="focus" rows="3"></textarea>
+            </label>
+            <label>
+              <span>压力</span>
+              <input name="pressure" type="range" min="0" max="6" />
+            </label>
+          </form>
+
+          <div class="section-divider"></div>
+
+          <div class="panel-heading compact">
+            <h2>当前场景</h2>
+            <button class="icon-button" id="saveSceneButton" title="保存场景">
+              <i data-lucide="save"></i>
+            </button>
+          </div>
+          <form id="sceneForm" class="stack-form">
+            <label>
+              <span>标题</span>
+              <input name="title" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>地点</span>
+              <input name="location" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>气氛</span>
+              <select name="mood">
+                <option>悬疑</option>
+                <option>紧张</option>
+                <option>诡异</option>
+                <option>荒诞</option>
+                <option>史诗</option>
+                <option>轻松</option>
+                <option>压抑</option>
+                <option>危险</option>
+              </select>
+            </label>
+            <label>
+              <span>主线片段</span>
+              <textarea name="plot" rows="5"></textarea>
+            </label>
+            <label>
+              <span>不可改写设定</span>
+              <textarea name="canon" rows="4"></textarea>
+            </label>
+            <div class="button-row">
+              <button type="button" class="ghost-button" id="snapshotSceneButton">
+                <i data-lucide="archive"></i>
+                <span>保存快照</span>
+              </button>
+              <button type="button" class="ghost-button" id="raisePressureButton">
+                <i data-lucide="flame"></i>
+                <span>压力+1</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="scene-history" id="sceneHistory"></div>
+
+          <div class="section-divider"></div>
+
+          <div class="panel-heading compact">
+            <h2>规则</h2>
+            <button class="icon-button" id="saveRulesButton" title="保存规则">
+              <i data-lucide="settings"></i>
+            </button>
+          </div>
+          <form id="rulesForm" class="stack-form">
+            <div class="form-grid two">
+              <label>
+                <span>骰面</span>
+                <input name="diceSides" type="number" min="2" max="1000" />
+              </label>
+              <label>
+                <span>判定方式</span>
+                <select name="checkMode">
+                  <option value="under">低于等于目标成功</option>
+                  <option value="over">高于等于目标成功</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-grid two">
+              <label>
+                <span>默认修正</span>
+                <input name="defaultModifier" type="number" min="-1000" max="1000" />
+              </label>
+            </div>
+            <div class="form-grid two">
+              <label>
+                <span>大成功</span>
+                <input name="critical" type="number" min="1" max="1000" />
+              </label>
+              <label>
+                <span>大失败</span>
+                <input name="fumble" type="number" min="1" max="1000" />
+              </label>
+            </div>
+            <label>
+              <span>技能列表</span>
+              <textarea name="skills" rows="4"></textarea>
+            </label>
+          </form>
+        </section>
+
+        <section class="panel command-panel" aria-label="主持台">
+          <button type="button" class="scene-panel-toggle" id="scenePanelToggle" aria-expanded="false" aria-controls="scenePanel">
+            <span class="scene-toggle-icon"><i data-lucide="panel-left-open"></i></span>
+            <span class="scene-toggle-copy">
+              <strong>当前局势</strong>
+              <small id="scenePanelSummary">战役 · 章节 · 当前焦点</small>
+            </span>
+            <i data-lucide="chevron-down" class="scene-toggle-chevron"></i>
+          </button>
+          <div class="panel-heading">
+            <h2>主持台</h2>
+            <div class="status-pill" id="autosaveStatus">已保存</div>
+          </div>
+
+          <nav class="host-quick-nav" aria-label="主持台快捷导航">
+            <button type="button" class="quick-nav-button active" data-scroll-target="playFlowPanel"><i data-lucide="play"></i><span>开场</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="actionForm"><i data-lucide="dice-5"></i><span>行动</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="combatMapSection"><i data-lucide="map"></i><span>地图</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="turnSection"><i data-lucide="list-ordered"></i><span>战斗</span></button>
+            <button type="button" class="quick-nav-button" data-host-drawer="ai"><i data-lucide="bot"></i><span>AI</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="gmChatPanel"><i data-lucide="messages-square"></i><span>聊天</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="quickSavePanel"><i data-lucide="save"></i><span>即时</span></button>
+            <button type="button" class="quick-nav-button" data-scroll-target="libraryPanel"><i data-lucide="library"></i><span>资料</span></button>
+            <button type="button" class="quick-nav-button" id="quickSavesButton"><i data-lucide="archive"></i><span>存档</span></button>
+          </nav>
+          <section class="play-flow-panel" id="playFlowPanel" aria-label="开跑控制台"></section>
+          <section class="quick-save-panel" id="quickSavePanel" aria-label="即时存档">
+            <div class="section-heading compact">
+              <div>
+                <span class="eyebrow">即时存档</span>
+                <h3>快速存读档</h3>
+                <p class="section-kicker">5 个固定槽位，随时保存当前进度，读档会覆盖当前进度。</p>
+              </div>
+              <div class="button-row tight">
+                <button class="ghost-button compact-select" type="button" id="refreshQuickSavesButton"><i data-lucide="refresh-cw"></i><span>刷新</span></button>
+                <button class="ghost-button compact-select" type="button" id="openAllSavesFromQuickPanel"><i data-lucide="archive"></i><span>全部存档</span></button>
+              </div>
+            </div>
+            <div class="quick-save-grid" id="quickSaveSlots"></div>
+            <p class="field-hint" id="quickSaveStatus">选择槽位保存，或读取已有存档。</p>
+          </section>
+          <section class="ai-player-panel" id="aiPlayerPanel" aria-label="AI 玩家">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">AI 玩家</span>
+                <h2>让 AI 扮演一名角色</h2>
+              </div>
+              <span class="status-pill" id="aiPlayerStatus">未启动</span>
+            </div>
+            <div class="ai-player-grid">
+              <label>
+                <span>角色 1</span>
+                <select id="aiPlayerCharacter"></select>
+              </label>
+              <label>
+                <span>角色 2（可选）</span>
+                <select id="aiPlayerCharacter2"></select>
+              </label>
+              <label>
+                <span>最多轮数</span>
+                <input id="aiPlayerMaxTurns" type="number" min="1" max="50" value="10" />
+              </label>
+            </div>
+            <div class="button-row tight">
+              <button type="button" class="ghost-button" id="generateAiTeammateButton"><i data-lucide="sparkles"></i><span>AI 按模组生成一个队友</span></button>
+            </div>
+            <p class="field-hint" id="aiTeammateStatus">角色列表为空时，可以用模组内容生成一个 AI 队友。</p>
+            <label class="inline-check" title="默认等待真人玩家发言后再回应；关闭后会连续自动行动">
+              <input type="checkbox" id="aiPlayerFollowHuman" checked />
+              <span>等待真人行动后再回应（推荐）</span>
+            </label>
+            <details class="ai-player-profile">
+              <summary>人设与目标（按角色保存，留空则使用角色卡和当前目标）</summary>
+              <div id="aiPlayerProfileList" class="ai-player-profile-list"></div>
+            </details>
+            <div class="button-row tight">
+              <button class="primary-button" id="startAiPlayerButton" type="button"><i data-lucide="play"></i><span>开始 AI 玩家</span></button>
+              <button class="ghost-button" id="stepAiPlayerButton" type="button"><i data-lucide="footprints"></i><span>AI 走一步</span></button>
+              <button class="ghost-button" id="pauseAiPlayerButton" type="button"><i data-lucide="pause"></i><span>暂停</span></button>
+              <button class="ghost-button" id="stopAiPlayerButton" type="button"><i data-lucide="square"></i><span>停止</span></button>
+            </div>
+            <p class="ai-player-detail" id="aiPlayerDetail">AI 只知道公开信息，不会读取主持备注、NPC 秘密或隐藏线索。</p>
+          </section>
+          <div class="dashboard-grid" id="dashboardGrid"></div>
+          <div class="player-status-strip" id="playerStatusStrip"></div>
+
+          <section class="combat-map-section" id="combatMapSection" aria-label="战斗地图" hidden>
+            <div class="section-heading">
+              <div>
+                <h2>战斗地图</h2>
+                <p class="section-kicker" id="mapModeLabel">未开启</p>
+              </div>
+              <div class="button-row tight">
+                <button type="button" class="ghost-button compact-select" id="toggleMapButton">
+                  <i data-lucide="grid-3x3"></i>
+                  <span>开启地图</span>
+                </button>
+                <button type="button" class="ghost-button compact-select" id="mapNextTurnButton" title="推进到下一行动者"><i data-lucide="skip-forward"></i><span>下一行动</span></button>
+                <button type="button" class="ghost-button compact-select" id="mapControlActiveButton" title="选中当前行动者"><i data-lucide="mouse-pointer-2"></i><span>控制当前</span></button>
+                <button type="button" class="icon-button" id="closeMapSheetButton" title="关闭地图">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+            </div>
+            <div class="map-library-bar">
+              <label>
+                <span>地图存档</span>
+                <select id="mapLibrarySelect"></select>
+              </label>
+              <button class="primary-button compact-select" type="button" id="saveMapLibraryButton"><i data-lucide="save"></i><span>保存当前地图</span></button>
+              <button class="ghost-button compact-select" type="button" id="loadMapLibraryButton"><i data-lucide="folder-open"></i><span>载入</span></button>
+              <button class="ghost-button compact-select" type="button" id="publishMapLibraryButton"><i data-lucide="send"></i><span>发布此地图</span></button>
+              <button class="ghost-button compact-select" type="button" id="deleteMapLibraryButton"><i data-lucide="trash-2"></i><span>删除</span></button>
+              <p class="field-hint" id="mapLibraryStatus">保存地图1、地图2等版本，随时切换发布。</p>
+              <div class="map-library-cards" id="mapLibraryCards"></div>
+            </div>
+            <div id="combatMapEditor" class="combat-map-editor" hidden>
+              <form id="mapForm" class="map-settings-form">
+                <label>
+                  <span>地图名称</span>
+                  <input name="name" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>列</span>
+                  <input name="cols" type="number" min="4" max="20" />
+                </label>
+                <label>
+                  <span>行</span>
+                  <input name="rows" type="number" min="4" max="20" />
+                </label>
+                <label>
+                  <span>当前棋子</span>
+                  <select name="selectedToken"></select>
+                </label>
+                <label>
+                  <span>模式</span>
+                  <select name="editMode">
+                    <option value="move">移动棋子</option>
+                    <option value="terrain">绘制地形</option>
+                    <option value="trap">布置陷阱</option>
+                    <option value="erase">擦除格子</option>
+                  </select>
+                </label>
+                <label>
+                  <span>行动范围</span>
+                  <input name="moveRange" type="number" min="0" max="20" />
+                </label>
+                <label class="toggle-field">
+                  <span>显示范围</span>
+                  <input name="showRange" type="checkbox" />
+                </label>
+                <label>
+                  <span>地形刷</span>
+                  <select name="terrainBrush">
+                    <option value="wall">墙体</option>
+                    <option value="difficult">困难地形</option>
+                    <option value="cover">掩体</option>
+                    <option value="water">水域</option>
+                    <option value="clear">空地</option>
+                  </select>
+                </label>
+                <label>
+                  <span>陷阱刷</span>
+                  <select name="trapBrush">
+                    <option value="hidden">隐藏陷阱</option>
+                    <option value="revealed">已显露陷阱</option>
+                    <option value="none">无陷阱</option>
+                  </select>
+                </label>
+                <div class="map-background-editor">
+                  <label><span>地图背景图</span><input id="mapBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" /></label>
+                  <label><span>缩放 <b id="mapBackgroundZoomValue">100%</b></span><input id="mapBackgroundZoom" type="range" min="100" max="300" value="100" /></label>
+                  <label><span>水平位置</span><input id="mapBackgroundOffsetX" type="range" min="0" max="100" value="50" /></label>
+                  <label><span>垂直位置</span><input id="mapBackgroundOffsetY" type="range" min="0" max="100" value="50" /></label>
+                  <div class="button-row tight">
+                    <button class="ghost-button compact-select" type="button" id="mapBackgroundFitButton"><i data-lucide="scan"></i><span>贴合格子</span></button>
+                    <button class="ghost-button compact-select danger-button" type="button" id="mapBackgroundClearButton"><i data-lucide="trash"></i><span>移除背景</span></button>
+                  </div>
+                  <p class="field-hint" id="mapBackgroundStatus">支持 PNG/JPG/WebP，最大 8MB。发布地图后玩家会看到背景。</p>
+                </div>
+              <div class="map-tool-group" aria-label="地图工具">
+                  <button type="button" class="icon-button" id="publishCombatButton" title="发布进入战斗模式">
+                    <i data-lucide="swords"></i>
+                  </button>
+                  <button type="button" class="icon-button" id="resetMapButton" title="重置棋子位置">
+                    <i data-lucide="refresh-ccw"></i>
+                  </button>
+                  <button type="button" class="icon-button" id="randomMapButton" title="随机生成地图">
+                    <i data-lucide="shuffle"></i>
+                  </button>
+                  <button type="button" class="icon-button" id="clearMapTilesButton" title="清空地形和陷阱">
+                    <i data-lucide="eraser"></i>
+                  </button>
+                  <button type="button" class="icon-button" id="revealTrapsButton" title="显露全部陷阱">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+              </form>
+              <form id="mapTokenForm" class="map-token-form">
+                <label>
+                  <span>临时棋子</span>
+                  <input name="name" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>类型</span>
+                  <select name="type">
+                    <option value="enemy">敌人</option>
+                    <option value="objective">目标</option>
+                    <option value="ally">友军</option>
+                  </select>
+                </label>
+                <button class="ghost-button" type="submit">
+                  <i data-lucide="plus"></i>
+                  <span>添加</span>
+                </button>
+              </form>
+              <div class="map-legend" id="mapLegend" aria-label="地图图例"></div>
+              <div class="combat-map" id="combatMap" role="grid" aria-label="战斗格子地图"></div>
+            </div>
+          </section>
+
+          <section class="turn-section" id="turnSection" aria-label="回合顺序">
+            <div class="section-heading">
+              <div>
+                <h2>回合顺序</h2>
+                <p class="section-kicker" id="turnRoundLabel">第 1 轮</p>
+              </div>
+              <div class="button-row tight">
+                <label class="inline-check" title="敌人回合自动移动和攻击">
+                  <input type="checkbox" id="autoEnemiesToggle" checked />
+                  <span>敌人自动</span>
+                </label>
+                <button type="button" class="icon-button" id="resetTurnsButton" title="重排行动顺序">
+                  <i data-lucide="list-restart"></i>
+                </button>
+                <button type="button" class="icon-button" id="nextTurnButton" title="下一行动者">
+                  <i data-lucide="skip-forward"></i>
+                </button>
+                <button type="button" class="ghost-button compact-select" id="controlTurnButton" title="把地图控制切换到当前行动者"><i data-lucide="mouse-pointer-2"></i><span>控制当前</span></button>
+                <button type="button" class="ghost-button compact-select" id="endCombatButton"><i data-lucide="flag"></i><span>结束战斗</span></button>
+              </div>
+            </div>
+            <div class="combat-now" id="combatNow"></div>
+            <div class="turn-list" id="turnList"></div>
+            <form id="combatActionForm" class="combat-action-form">
+              <div class="form-grid four">
+                <label>
+                  <span>动作</span>
+                  <select name="actionType">
+                    <option value="attack">攻击</option>
+                    <option value="heal">治疗</option>
+                  </select>
+                </label>
+                <label>
+                  <span>目标</span>
+                  <select name="target"></select>
+                </label>
+                <label>
+                  <span>修正</span>
+                  <input name="modifier" type="number" value="0" />
+                </label>
+                <label>
+                  <span>备注</span>
+                  <input name="note" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit" class="primary-button">
+                  <i data-lucide="swords"></i>
+                  <span>执行动作</span>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <form id="actionForm" class="action-form">
+            <div class="form-grid four">
+              <label>
+                <span>行动者</span>
+                <select name="actor"></select>
+              </label>
+              <label>
+                <span>技能</span>
+                <select name="skill"></select>
+              </label>
+              <label>
+                <span>意图</span>
+                <select name="intent">
+                  <option>调查</option>
+                  <option>交涉</option>
+                  <option>潜入</option>
+                  <option>战斗</option>
+                  <option>移动</option>
+                  <option>支援</option>
+                  <option>其他</option>
+                </select>
+              </label>
+              <label>
+                <span>修正</span>
+                <input name="modifier" type="number" />
+              </label>
+            </div>
+            <label>
+              <span>行动描述（可留空）</span>
+              <textarea name="action" rows="4"></textarea>
+            </label>
+            <div class="button-row action-primary-row">
+              <button type="submit" class="primary-button">
+                <i data-lucide="dice-5"></i>
+                <span>掷骰判定</span>
+              </button>
+              <details class="action-tools">
+                <summary><i data-lucide="wrench"></i><span>工具</span></summary>
+                <div class="action-tools-menu">
+                  <button type="button" class="ghost-button" id="draftButton">
+                    <i data-lucide="sparkles"></i>
+                    <span>主持草稿</span>
+                  </button>
+                  <button type="button" class="ghost-button" id="npcLineButton">
+                    <i data-lucide="message-circle"></i>
+                    <span>NPC台词</span>
+                  </button>
+                  <button type="button" class="ghost-button" id="manualLogButton">
+                    <i data-lucide="plus"></i>
+                    <span>记录事件</span>
+                  </button>
+                </div>
+              </details>
+            </div>
+          </form>
+
+          <form id="diceForm" class="quick-dice-form">
+            <label class="dice-expression-field">
+              <span>通用骰子</span>
+              <input name="expression" type="text" autocomplete="off" placeholder="例如 1d20 / 2d6+3" />
+            </label>
+            <label>
+              <span>原因</span>
+              <input name="reason" type="text" autocomplete="off" placeholder="为什么投（可留空）" />
+            </label>
+            <button class="ghost-button" type="submit">
+              <i data-lucide="dice-6"></i>
+              <span>投掷</span>
+            </button>
+            <div class="dice-presets" role="group" aria-label="常用骰子">
+              <button type="button" data-dice-preset="1d100">1d100</button>
+              <button type="button" data-dice-preset="1d20">1d20</button>
+              <button type="button" data-dice-preset="2d20">2d20</button>
+              <button type="button" data-dice-preset="1d12">1d12</button>
+              <button type="button" data-dice-preset="1d10">1d10</button>
+              <button type="button" data-dice-preset="1d8">1d8</button>
+              <button type="button" data-dice-preset="1d6">1d6</button>
+              <button type="button" data-dice-preset="1d4">1d4</button>
+              <button type="button" data-dice-preset="2d6+3">2d6+3</button>
+              <button type="button" data-dice-preset="3d6">3d6</button>
+            </div>
+          </form>
+
+          <div class="draft-box" id="draftBox">
+            <div class="draft-heading">
+              <div class="draft-title">主持草稿</div>
+              <div class="button-row tight">
+                <button type="button" class="icon-button" id="aiGmAssistButton" title="AI 主持建议">
+                  <i data-lucide="sparkles"></i>
+                </button>
+                <button type="button" class="icon-button" id="aiTurnButton" title="AI 主持本回合">
+                  <i data-lucide="wand-sparkles"></i>
+                </button>
+                <button type="button" class="icon-button" id="aiPublicDraftButton" title="AI 公开叙述草稿">
+                  <i data-lucide="bot"></i>
+                </button>
+                <button type="button" class="icon-button" id="aiActionPlanButton" title="AI 判定和状态建议">
+                  <i data-lucide="list-checks"></i>
+                </button>
+                <button type="button" class="icon-button" id="aiScenarioPlanButton" title="AI 剧情节点生成">
+                  <i data-lucide="git-branch-plus"></i>
+                </button>
+                <button type="button" class="icon-button" id="publishDraftButton" title="发布草稿到玩家聊天">
+                  <i data-lucide="send"></i>
+                </button>
+                <button type="button" class="icon-button" id="copyDraftButton" title="复制草稿">
+                  <i data-lucide="copy"></i>
+                </button>
+                <button type="button" class="icon-button" id="buildPromptButton" title="生成 AI 提示词">
+                  <i data-lucide="bot"></i>
+                </button>
+                <button type="button" class="icon-button" id="aiDebugButton" title="AI 回合记录">
+                  <i data-lucide="history"></i>
+                </button>
+              </div>
+            </div>
+            <div class="draft-status" id="aiStatus">AI 未运行</div>
+            <p id="draftText">等待行动。</p>
+            <div class="ai-control-panel" id="aiControlPanel">
+              <div class="ai-control-heading">
+                <div>
+                  <strong>AI 托管控制</strong>
+                  <small id="aiAutopilotStatus">未开启</small>
+                </div>
+                <span class="status-pill" id="aiQueueCount">队列 0</span>
+              </div>
+              <div class="ai-control-grid">
+                <label>
+                  <span>托管模式</span>
+                  <select id="aiAutopilotMode">
+                    <option value="assist">辅助：只生成建议</option>
+                    <option value="confirm">确认：生成后等待主持确认</option>
+                    <option value="autopilot">全自动：自动执行安全规则</option>
+                  </select>
+                </label>
+                <label class="toggle-field ai-toggle-field">
+                  <span>开启 AI 托管</span>
+                  <input id="aiAutopilotToggle" type="checkbox" />
+                </label>
+                <label class="toggle-field ai-toggle-field" title="允许 AI 结算 NPC 或环境对玩家造成的伤害、压力与状态变化；AI 仍然不能替玩家决定行动或花费资源。">
+                  <span>允许结算玩家数值</span>
+                  <input id="aiAllowPlayerUpdates" type="checkbox" />
+                </label>
+                <label>
+                  <span>回复长度</span>
+                  <select id="aiResponseStyle">
+                    <option value="short">短：快速推进</option>
+                    <option value="normal">标准：叙述与选项</option>
+                    <option value="detailed">详细：更多氛围</option>
+                  </select>
+                </label>
+              </div>
+              <div class="button-row tight ai-control-actions">
+                <button type="button" class="primary-button" id="quickAiHostButtonFixed"><i data-lucide="bot"></i><span>AI 接手下一步</span></button>
+                <button type="button" class="ghost-button" id="pauseAiButton"><i data-lucide="pause"></i><span>暂停</span></button>
+                <button type="button" class="ghost-button" id="resumeAiButton"><i data-lucide="play"></i><span>继续</span></button>
+                <button type="button" class="ghost-button" id="handoffToManualButton"><i data-lucide="hand"></i><span>转为手动</span></button>
+                <details class="ai-more-actions">
+                  <summary>更多 AI 操作</summary>
+                  <div class="ai-more-actions-menu">
+                    <button type="button" class="ghost-button" id="cancelAiButton"><i data-lucide="square"></i><span>取消当前</span></button>
+                    <button type="button" class="ghost-button" id="retryAiQueueButton"><i data-lucide="rotate-cw"></i><span>重试当前</span></button>
+                    <button type="button" class="ghost-button" id="resetAiContextButton"><i data-lucide="rotate-ccw"></i><span>从此刻重开上下文</span></button>
+                    <button type="button" class="ghost-button" id="clearAiQueueButton"><i data-lucide="list-x"></i><span>清空队列</span></button>
+                    <button type="button" class="ghost-button danger-button" id="finishCampaignButton"><i data-lucide="flag"></i><span>结束模组 / 进入复盘</span></button>
+                  </div>
+                </details>
+              </div>
+              <small class="ai-control-hint" id="aiControlHint">玩家消息会保留在聊天记录中。AI 出错时会自动暂停，当前行动不会丢失。</small>
+            </div>
+            <div class="ai-plan-panel ai-turn-preview" id="aiTurnPreview" hidden>
+              <div class="section-heading mini">
+                <h3>AI 主持回合预览</h3>
+                <button type="button" class="ghost-button" id="applyAiTurnButton">
+                  <i data-lucide="check"></i>
+                  <span>确认并执行</span>
+                </button>
+              </div>
+            </div>
+            <div class="ai-plan-panel pending-check-panel" id="pendingCheckPanel" hidden>
+              <div class="section-heading mini">
+                <h3>待玩家判定</h3>
+                <div class="button-row tight">
+                  <span class="status-pill" id="pendingCheckCount">0</span>
+                  <button type="button" class="ghost-button compact-select" id="clearPendingChecksButton" title="清空所有待玩家判定，并让 AI 队列继续">
+                    <i data-lucide="eraser"></i>
+                    <span>清理</span>
+                  </button>
+                </div>
+              </div>
+              <div id="pendingCheckList" class="ai-player-checks"></div>
+            </div>
+            <div class="ai-plan-panel ai-debug-panel" id="aiDebugPanel" hidden>
+              <div class="section-heading mini">
+                <h3>AI 回合记录</h3>
+                <button type="button" class="icon-button" id="closeAiDebugButton" title="关闭">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+              <div class="ai-debug-list" id="aiDebugList"></div>
+              <div class="ai-debug-detail" id="aiDebugDetail"></div>
+            </div>
+            <div class="ai-plan-panel" id="aiPlanPanel" hidden>
+              <div class="section-heading mini">
+                <h3>AI 操作建议</h3>
+                <button type="button" class="ghost-button" id="applyAiPlanButton">
+                  <i data-lucide="check"></i>
+                  <span>应用建议</span>
+                </button>
+              </div>
+              <div id="aiPlanList" class="ai-plan-list"></div>
+            </div>
+          </div>
+
+          <div class="section-heading" id="gameLogSection">
+            <h2>游戏日志</h2>
+            <div class="button-row tight">
+              <select id="logFilter" class="compact-select" title="筛选日志">
+                <option value="all">全部</option>
+                <option value="roll">判定</option>
+                <option value="dice">骰子</option>
+                <option value="note">事件</option>
+                <option value="scene">场景</option>
+              </select>
+              <button class="icon-button" id="clearLogsButton" title="清空日志">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+          <div id="logList" class="log-list"></div>
+
+          <section class="play-chat-panel gm-chat-panel" aria-label="游玩聊天">
+            <div class="section-heading">
+              <h2>游玩聊天</h2>
+              <span class="status-pill" id="gmChatCount">0 条</span>
+            </div>
+            <div class="chat-feed compact" id="gmChatFeed"></div>
+            <div class="chat-waiting-status" id="gmChatWaiting" hidden></div>
+            <div class="button-row tight chat-quick-actions">
+              <button type="button" class="ghost-button" id="downloadTranscriptButton">
+                <i data-lucide="download"></i>
+                <span>导出聊天记录</span>
+              </button>
+              <button type="button" class="ghost-button" id="chatPublishCombatButton">
+                <i data-lucide="swords"></i>
+                <span>发布战斗开始</span>
+              </button>
+            </div>
+            <form id="gmChatForm" class="chat-compose gm-compose">
+              <label>
+                <span>发言者</span>
+                <select name="speaker"></select>
+              </label>
+              <label>
+                <span>可见性</span>
+                <select name="visibility">
+                  <option value="public">公开</option>
+                  <option value="gm">主持备注</option>
+                </select>
+              </label>
+              <label class="chat-message-field">
+                <span>消息</span>
+                <textarea name="message" rows="2" placeholder="输入消息，Ctrl+Enter 发送"></textarea>
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                <span>发送</span>
+              </button>
+            </form>
+          </section>
+        </section>
+
+        <aside class="host-chat-column" id="hostChatColumn" aria-label="游玩聊天"></aside>
+
+        <aside class="panel library-panel" aria-label="资料库" hidden>
+          <div class="library-sheet-head">
+            <strong>资料库</strong>
+            <button type="button" class="icon-button" id="closeLibrarySheetButton" title="关闭资料库"><i data-lucide="x"></i></button>
+          </div>
+          <div class="tab-list" role="tablist">
+            <button class="tab-button active" data-tab="players" type="button">玩家</button>
+            <button class="tab-button" data-tab="npcs" type="button">NPC</button>
+            <button class="tab-button" data-tab="clues" type="button">线索</button>
+            <button class="tab-button" data-tab="published" type="button">公开卡</button>
+            <button class="tab-button" data-tab="scenes" type="button">剧情</button>
+          </div>
+
+          <div id="playersTab" class="tab-panel active">
+            <div class="section-heading">
+              <h2>玩家角色</h2>
+              <button class="icon-button" id="newPlayerButton" title="新增玩家">
+                <i data-lucide="user-plus"></i>
+              </button>
+            </div>
+            <div id="playerList" class="card-list"></div>
+            <form id="playerForm" class="stack-form editor-form">
+              <input name="id" type="hidden" />
+              <label>
+                <span>姓名</span>
+                <input name="name" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>定位</span>
+                <input name="concept" type="text" autocomplete="off" />
+              </label>
+              <div class="form-grid four compact-fields">
+                <label>
+                  <span>生命</span>
+                  <input name="hp" type="number" min="0" max="999" />
+                </label>
+                <label>
+                  <span>上限</span>
+                  <input name="maxHp" type="number" min="1" max="999" />
+                </label>
+                <label>
+                  <span>技能点</span>
+                  <input name="skillPoints" type="number" min="0" max="999" />
+                </label>
+                <label>
+                  <span>上限</span>
+                  <input name="maxSkillPoints" type="number" min="1" max="999" />
+                </label>
+              </div>
+              <div class="form-grid four compact-fields">
+                <label>
+                  <span>灵敏</span>
+                  <input name="agility" type="number" min="0" max="999" />
+                </label>
+                <label>
+                  <span>防御</span>
+                  <input name="defense" type="number" min="0" max="999" />
+                </label>
+                <label>
+                  <span>闪避</span>
+                  <input name="dodge" type="number" min="0" max="999" />
+                </label>
+                <label>
+                  <span>武器</span>
+                  <input name="weaponName" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <div class="form-grid four compact-fields">
+                <label>
+                  <span>攻击技能</span>
+                  <input name="weaponSkill" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>范围</span>
+                  <input name="weaponRange" type="number" min="1" max="50" />
+                </label>
+                <label>
+                  <span>伤害</span>
+                  <input name="weaponDamage" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>治疗骰</span>
+                  <input name="healAmount" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <label>
+                <span>压力</span>
+                <input name="pressure" type="range" min="0" max="6" />
+              </label>
+              <label>
+                <span>状态</span>
+                <textarea name="conditions" rows="2"></textarea>
+              </label>
+              <label>
+                <span>物品</span>
+                <textarea name="inventory" rows="3"></textarea>
+              </label>
+              <label>
+                <span>技能值</span>
+                <textarea name="skills" rows="5"></textarea>
+              </label>
+              <label>
+                <span>属性（可选，每行：名称: 数值）</span>
+                <textarea name="attributes" rows="3" placeholder="力量: 55&#10;敏捷: 50&#10;意志: 60"></textarea>
+              </label>
+              <label>
+                <span>备注</span>
+                <textarea name="notes" rows="3"></textarea>
+              </label>
+              <div class="button-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="save"></i>
+                  <span>保存玩家</span>
+                </button>
+                <button class="ghost-button" type="button" id="deletePlayerButton">
+                  <i data-lucide="trash"></i>
+                  <span>删除</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="npcsTab" class="tab-panel">
+            <div class="section-heading">
+              <h2>重要 NPC</h2>
+              <button class="icon-button" id="newNpcButton" title="新增 NPC">
+                <i data-lucide="user-round-plus"></i>
+              </button>
+            </div>
+            <div id="npcList" class="card-list"></div>
+            <form id="npcForm" class="stack-form editor-form">
+              <input name="id" type="hidden" />
+              <label>
+                <span>姓名</span>
+                <input name="name" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>性格</span>
+                <input name="personality" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>说话方式</span>
+                <input name="voice" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>目标</span>
+                <input name="goal" type="text" autocomplete="off" />
+              </label>
+              <div class="form-grid two">
+                <label>
+                  <span>态度</span>
+                  <select name="attitude">
+                    <option>友善</option>
+                    <option>谨慎</option>
+                    <option>冷淡</option>
+                    <option>敌对</option>
+                    <option>未知</option>
+                  </select>
+                </label>
+                <label>
+                  <span>地点</span>
+                  <input name="location" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <div class="combat-card-editor">
+                <div class="section-heading mini">
+                  <h3>战斗卡</h3>
+                  <button class="ghost-button" type="button" id="addNpcTokenButton">
+                    <i data-lucide="map-pin-plus"></i>
+                    <span>加入地图</span>
+                  </button>
+                </div>
+                <div class="form-grid two">
+                  <label>
+                    <span>战斗身份</span>
+                    <select name="combatRole">
+                      <option value="none">非战斗</option>
+                      <option value="enemy">敌人</option>
+                      <option value="ally">友军</option>
+                      <option value="boss">首领</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>先攻</span>
+                    <input name="initiative" type="number" min="-999" max="999" />
+                  </label>
+                </div>
+                <div class="form-grid four compact-fields">
+                  <label>
+                    <span>生命</span>
+                    <input name="hp" type="number" min="0" max="999" />
+                  </label>
+                  <label>
+                    <span>上限</span>
+                    <input name="maxHp" type="number" min="1" max="999" />
+                  </label>
+                  <label>
+                    <span>护甲</span>
+                    <input name="armor" type="number" min="0" max="999" />
+                  </label>
+                  <label>
+                    <span>攻击</span>
+                    <input name="attack" type="number" min="-999" max="999" />
+                  </label>
+                </div>
+                <div class="form-grid four compact-fields">
+                  <label>
+                    <span>灵敏</span>
+                    <input name="agility" type="number" min="0" max="999" />
+                  </label>
+                  <label>
+                    <span>防御</span>
+                    <input name="defense" type="number" min="0" max="999" />
+                  </label>
+                  <label>
+                    <span>闪避</span>
+                    <input name="dodge" type="number" min="0" max="999" />
+                  </label>
+                  <label>
+                    <span>武器</span>
+                    <input name="weaponName" type="text" autocomplete="off" />
+                  </label>
+                </div>
+                <div class="form-grid four compact-fields">
+                  <label>
+                    <span>攻击技能</span>
+                    <input name="weaponSkill" type="text" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>范围</span>
+                    <input name="weaponRange" type="number" min="1" max="50" />
+                  </label>
+                  <label>
+                    <span>伤害</span>
+                    <input name="weaponDamage" type="text" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>治疗骰</span>
+                    <input name="healAmount" type="text" autocomplete="off" />
+                  </label>
+                </div>
+                <label>
+                  <span>战斗技能</span>
+                  <textarea name="combatSkills" rows="3"></textarea>
+                </label>
+                <label>
+                  <span>战斗状态</span>
+                  <textarea name="conditions" rows="2"></textarea>
+                </label>
+              </div>
+              <label>
+                <span>关系</span>
+                <textarea name="relationship" rows="2"></textarea>
+              </label>
+              <div class="npc-memory-editor">
+                <div class="section-heading mini">
+                  <h3>第二层 · 当前事实与互动记忆</h3>
+                </div>
+                <label class="toggle-field">
+                  <span>已经和玩家见过面</span>
+                  <input name="met" type="checkbox" />
+                </label>
+                <div class="form-grid two">
+                  <label>
+                    <span>初次见面</span>
+                    <input name="firstMet" type="text" placeholder="第一章 · 金博尔家书房" />
+                  </label>
+                  <label>
+                    <span>最后见面</span>
+                    <input name="lastMet" type="text" placeholder="墓园" />
+                  </label>
+                </div>
+                <label>
+                  <span>玩家已经知道的关系</span>
+                  <textarea name="knownToPlayers" rows="2" placeholder="玩家亲眼见过的关系、承诺或冲突"></textarea>
+                </label>
+                <label>
+                  <span>当前事实 / 限定</span>
+                  <textarea name="currentFacts" rows="4" placeholder="优先级最高。例如：已与托马斯见面，托马斯已经知道真相；不要再让他说“别告诉托马斯”。"></textarea>
+                </label>
+                <div class="section-heading mini">
+                  <h3>第三层 · 互动记忆</h3>
+                </div>
+                <label>
+                  <span>互动记忆</span>
+                  <textarea name="memoryEvents" rows="4" placeholder="每行一条：场景｜发生了什么｜态度变化"></textarea>
+                </label>
+                <p class="field-hint">互动记忆会随 NPC 保存，并在 AI 主持时优先带入上下文。</p>
+              </div>
+              <label>
+                <span>知道什么</span>
+                <textarea name="knowledge" rows="2" placeholder="这个 NPC 亲眼见过、听说过或确信的事实"></textarea>
+              </label>
+              <label>
+                <span>不知道 / 不能泄露什么</span>
+                <textarea name="ignorance" rows="2" placeholder="知识边界，防止 AI 让 NPC 全知"></textarea>
+              </label>
+              <p class="field-hint">每行一条。AI 只会让这个 NPC 使用“知道”的内容；被问及“不知道”的内容时必须表现出不确定、猜测或拒绝透露。</p>
+              <div class="section-heading mini">
+                <h3>第一层 · 背景秘密（模组原始设定）</h3>
+              </div>
+              <label>
+                <span>秘密</span>
+                <textarea name="secret" rows="3"></textarea>
+              </label>
+              <label>
+                <span>备注</span>
+                <textarea name="notes" rows="3"></textarea>
+              </label>
+              <div class="button-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="save"></i>
+                  <span>保存 NPC</span>
+                </button>
+                <button class="ghost-button" type="button" id="deleteNpcButton">
+                  <i data-lucide="trash"></i>
+                  <span>删除</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="cluesTab" class="tab-panel">
+            <div class="section-heading">
+              <h2>线索</h2>
+              <div class="button-row tight">
+                <button class="ghost-button compact-select" id="autoDiscoverCluesButton" type="button">
+                  <i data-lucide="scan-search"></i>
+                  <span>从本场景对话补录</span>
+                </button>
+                <button class="icon-button" id="newClueButton" title="新增线索">
+                  <i data-lucide="file-plus-2"></i>
+                </button>
+              </div>
+            </div>
+            <div id="clueList" class="card-list"></div>
+            <p class="field-hint" id="clueDiscoveryStatus">从实际公开对话中核对已获得的线索。</p>
+            <form id="clueForm" class="stack-form editor-form">
+              <input name="id" type="hidden" />
+              <label>
+                <span>标题</span>
+                <input name="title" type="text" autocomplete="off" />
+              </label>
+              <div class="form-grid two">
+                <label>
+                  <span>卡片类型</span>
+                  <select name="kind">
+                    <option value="clue">线索卡</option>
+                    <option value="task">任务卡</option>
+                  </select>
+                </label>
+                <label>
+                  <span>奖励</span>
+                  <input name="reward" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <div class="form-grid two">
+                <label>
+                  <span>状态</span>
+                  <select name="status">
+                    <option>隐藏</option>
+                    <option>已发现</option>
+                    <option>已失效</option>
+                  </select>
+                </label>
+                <label>
+                  <span>来源</span>
+                  <input name="source" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <div class="publish-control-panel">
+                <label>
+                  <span>发布范围</span>
+                  <select name="publishMode">
+                    <option value="hidden">仅主持保存</option>
+                    <option value="public">全部玩家可见</option>
+                    <option value="targets">指定玩家可见</option>
+                  </select>
+                </label>
+                <div class="target-player-list" id="clueTargetPlayers"></div>
+              </div>
+              <label>
+                <span>目标</span>
+                <input name="objective" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>内容</span>
+                <textarea name="text" rows="5"></textarea>
+              </label>
+              <div class="button-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="save"></i>
+                  <span>保存线索</span>
+                </button>
+                <button class="ghost-button" type="button" id="publishClueButton">
+                  <i data-lucide="send"></i>
+                  <span>发布</span>
+                </button>
+                <button class="ghost-button" type="button" id="revealClueButton">
+                  <i data-lucide="eye"></i>
+                  <span>发现</span>
+                </button>
+                <button class="ghost-button" type="button" id="deleteClueButton">
+                  <i data-lucide="trash"></i>
+                  <span>删除</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="publishedTab" class="tab-panel">
+            <div class="section-heading">
+              <h2>玩家公开卡</h2>
+              <span class="status-pill" id="publishedCount">0 张</span>
+            </div>
+            <div id="publishedList" class="published-list"></div>
+          </div>
+
+          <div id="scenesTab" class="tab-panel">
+            <div class="section-heading">
+              <h2>剧情节点</h2>
+              <button class="icon-button" id="newScenarioNodeButton" title="新增剧情节点">
+                <i data-lucide="file-plus-2"></i>
+              </button>
+            </div>
+            <div id="scenarioNodeList" class="card-list"></div>
+            <div class="investigation-board host-investigation-board" id="hostInvestigationBoard"></div>
+            <form id="scenarioNodeForm" class="stack-form editor-form">
+              <input name="id" type="hidden" />
+              <label>
+                <span>标题</span>
+                <input name="title" type="text" autocomplete="off" />
+              </label>
+              <div class="form-grid two">
+                <label>
+                  <span>地点</span>
+                  <input name="location" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>状态</span>
+                  <select name="status">
+                    <option>未开始</option>
+                    <option>进行中</option>
+                    <option>已完成</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-grid two">
+                <label>
+                  <span>玩家可见性</span>
+                  <select name="visibility">
+                    <option value="hidden">仅主持</option>
+                    <option value="public">全部玩家</option>
+                    <option value="targets">指定玩家</option>
+                  </select>
+                </label>
+                <label>
+                  <span>当前场景</span>
+                  <input name="active" type="checkbox" />
+                </label>
+              </div>
+              <div class="target-player-list" id="scenarioTargetPlayers"></div>
+              <label>
+                <span>公开描述</span>
+                <textarea name="publicText" rows="3"></textarea>
+              </label>
+              <label>
+                <span>主持备注</span>
+                <textarea name="gmText" rows="3"></textarea>
+              </label>
+              <div class="form-grid two">
+                <label>
+                  <span>玩家画面</span>
+                  <input name="imageUrl" type="text" autocomplete="off" />
+                </label>
+                <label>
+                  <span>背景音乐</span>
+                  <input name="musicUrl" type="text" autocomplete="off" />
+                </label>
+              </div>
+              <label>
+                <span>气氛/音效</span>
+                <input name="ambience" type="text" autocomplete="off" />
+              </label>
+              <label>
+                <span>关联线索</span>
+                <textarea name="clues" rows="3"></textarea>
+              </label>
+              <label>
+                <span>触发条件</span>
+                <textarea name="triggers" rows="2"></textarea>
+              </label>
+              <label>
+                <span>后续节点</span>
+                <textarea name="nextNodes" rows="2"></textarea>
+              </label>
+              <div class="scenario-next-node-editor">
+                <div class="field-hint">连接到后续节点（调查板会显示可前往地点）</div>
+                <div class="target-player-list scenario-next-node-list" id="scenarioNextNodes"></div>
+              </div>
+              <div class="button-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="save"></i>
+                  <span>保存节点</span>
+                </button>
+                <button class="ghost-button" type="button" id="publishScenarioNodeButton">
+                  <i data-lucide="send"></i>
+                  <span>发布场景</span>
+                </button>
+                <button class="ghost-button" type="button" id="setActiveScenarioNodeButton">
+                  <i data-lucide="locate-fixed"></i>
+                  <span>设为当前场景</span>
+                </button>
+                <button class="ghost-button" type="button" id="deleteScenarioNodeButton">
+                  <i data-lucide="trash"></i>
+                  <span>删除</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </aside>
+      </main>
+
+      <main class="player-view" id="playerWorkspace" hidden>
+        <section class="player-stage" aria-label="玩家游玩界面">
+          <section class="panel player-room-card" id="playerRoomCard" hidden>
+            <div class="section-heading compact">
+              <div>
+                <span class="eyebrow">我的房间</span>
+                <h3 id="playerRoomName">未连接</h3>
+              </div>
+              <span class="status-pill" id="playerRoomRole">玩家</span>
+            </div>
+            <p class="player-room-code" id="playerRoomCode">房间码 —</p>
+            <p class="player-room-character" id="playerRoomCharacter">角色：—</p>
+            <p class="player-room-character" id="playerRoomCampaign">存档：—</p>
+            <div class="player-room-members" id="playerRoomMembers"></div>
+            <div class="button-row tight">
+              <button class="ghost-button compact-select" type="button" id="playerRoomInfoButton"><i data-lucide="users"></i><span>房间信息</span></button>
+              <button class="ghost-button compact-select" type="button" id="playerRoomCharacterButton"><i data-lucide="repeat-2"></i><span>更换角色</span></button>
+              <button class="ghost-button compact-select" type="button" id="playerRecapButton"><i data-lucide="book-open"></i><span>前情提要</span></button>
+            </div>
+            <div class="player-action-feedback" id="playerActionStatus" hidden></div>
+          </section>
+          <div class="player-brief">
+            <div>
+              <span class="eyebrow">当前场景</span>
+              <h2 id="playerSceneTitle">未命名场景</h2>
+              <p id="playerSceneMeta"></p>
+            </div>
+            <p id="playerSceneFocus"></p>
+          </div>
+          <section class="player-scene-media" id="playerSceneMedia" hidden></section>
+
+          <div class="player-status-strip" id="playerViewStatusStrip"></div>
+
+          <section class="player-rules-panel" id="playerRulesPanel" hidden>
+            <div class="section-heading mini">
+              <h2 id="playerRulesTitle">规则动作</h2>
+              <span class="status-pill" id="playerRulesSystem">—</span>
+            </div>
+            <div id="playerRulesCoc" hidden>
+              <label class="rules-inline-field"><span>失败理智损失</span><input id="cocSanLoss" type="text" value="1d6" /></label>
+              <div class="button-row tight">
+                <button class="primary-button compact-select" type="button" id="cocSanCheckButton"><i data-lucide="brain"></i><span>理智检定</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocFirstAidButton"><i data-lucide="heart-pulse"></i><span>急救</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocStabilizeButton"><i data-lucide="shield-plus"></i><span>稳定濒死</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocDyingCheckButton"><i data-lucide="activity"></i><span>濒死检定</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocMedicalButton"><i data-lucide="stethoscope"></i><span>医学治疗</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocLuckSpendButton"><i data-lucide="clover"></i><span>消耗幸运</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocPushRollButton"><i data-lucide="dices"></i><span>孤注一掷</span></button>
+                <button class="ghost-button compact-select" type="button" id="cocSkillGrowthButton"><i data-lucide="trending-up"></i><span>技能成长</span></button>
+              </div>
+            </div>
+            <div id="playerRulesDnd" hidden>
+              <div class="button-row tight">
+                <button class="ghost-button compact-select" type="button" id="dndShortRestButton"><i data-lucide="coffee"></i><span>短休</span></button>
+                <button class="primary-button compact-select" type="button" id="dndLongRestButton"><i data-lucide="moon"></i><span>长休</span></button>
+                <button class="ghost-button compact-select" type="button" id="dndDeathSaveButton"><i data-lucide="skull"></i><span>死亡豁免</span></button>
+              </div>
+              <div class="rules-inline-field">
+                <label><span>法术位</span><select id="dndSlotLevel"></select></label>
+                <button class="ghost-button compact-select" type="button" id="dndUseSlotButton"><i data-lucide="sparkles"></i><span>消耗法术位</span></button>
+              </div>
+              <div class="rules-inline-field">
+                <label><span>准备法术</span><input id="dndSpellName" type="text" placeholder="例如：治疗伤口" list="dndSpellOptions" /></label>
+                <datalist id="dndSpellOptions">
+                  <option value="治疗伤口"></option>
+                  <option value="火球术"></option>
+                  <option value="魔法飞弹"></option>
+                  <option value="护盾"></option>
+                  <option value="燃烧之手"></option>
+                  <option value="迷雾步"></option>
+                  <option value="侦测魔法"></option>
+                  <option value="法师护甲"></option>
+                  <option value="祝福术"></option>
+                  <option value="治愈真言"></option>
+                  <option value="命令术"></option>
+                  <option value="隐形术"></option>
+                  <option value="闪电束"></option>
+                  <option value="反制法术"></option>
+                  <option value="飞行术"></option>
+                </datalist>
+                <button class="ghost-button compact-select" type="button" id="dndAddSpellButton"><i data-lucide="plus"></i><span>准备</span></button>
+              </div>
+              <div class="dnd-prepared-list" id="dndPreparedList"></div>
+              <div class="button-row tight">
+                <button class="ghost-button compact-select" type="button" id="dndExhaustionUpButton"><i data-lucide="triangle-alert"></i><span>力竭 +1</span></button>
+                <button class="ghost-button compact-select" type="button" id="dndExhaustionDownButton"><i data-lucide="rotate-ccw"></i><span>恢复力竭</span></button>
+                <button class="ghost-button compact-select" type="button" id="dndLevelUpButton"><i data-lucide="arrow-up-circle"></i><span>升级</span></button>
+              </div>
+            </div>
+            <p class="field-hint" id="playerRulesStatus"></p>
+          </section>
+
+          <section class="player-action-hints" aria-label="可选行动">
+            <div class="section-heading mini">
+              <h2>可选行动</h2>
+            </div>
+            <div class="play-flow-choices" id="playerActionHints"></div>
+          </section>
+
+          <section class="player-check-panel" id="playerCheckPanel" hidden aria-label="待处理判定">
+            <div class="section-heading mini">
+              <h2>待处理判定</h2>
+              <span class="status-pill" id="playerCheckCount">0</span>
+            </div>
+            <div id="playerCheckList" class="ai-player-checks"></div>
+          </section>
+
+          <section class="player-map-panel" id="playerMapPanel" aria-label="玩家地图">
+            <div class="section-heading">
+              <h2>公开地图</h2>
+              <span class="status-pill" id="playerMapLabel">未开启</span>
+            </div>
+            <div class="combat-map player-map" id="playerCombatMap" role="grid" aria-label="玩家公开地图"></div>
+          </section>
+
+          <section class="published-player-panel" aria-label="公开线索和任务">
+            <div class="section-heading">
+              <h2>公开卡</h2>
+              <span class="status-pill" id="playerPublishedCount">0 张</span>
+            </div>
+            <div id="playerPublishedList" class="published-list player-published-list"></div>
+          </section>
+
+          <section class="player-investigation-panel" aria-label="调查板">
+            <div class="section-heading">
+              <h2>调查板</h2>
+              <span class="status-pill" id="playerInvestigationCount">0 个地点</span>
+            </div>
+            <div class="investigation-board player-investigation-board" id="playerInvestigationBoard"></div>
+          </section>
+        </section>
+
+        <section class="player-chat-shell" aria-label="聊天游玩界面">
+          <div class="chat-header">
+            <div>
+              <span class="eyebrow">主频道 · 公开</span>
+              <h2>游玩聊天</h2>
+            </div>
+            <div class="chat-header-meta">
+              <button type="button" class="ghost-button compact-select" id="downloadTranscriptButtonPlayer">
+                <i data-lucide="download"></i>
+                <span>导出聊天</span>
+              </button>
+              <span class="chat-live-dot"><i></i>实时</span>
+              <span class="status-pill" id="playerChatCount">0 条</span>
+            </div>
+          </div>
+          <div class="chat-roll-banner" id="playerRollResult" hidden></div>
+          <div class="chat-feed" id="playerChatFeed"></div>
+          <div class="chat-waiting-status" id="playerChatWaiting" hidden></div>
+          <div class="player-action-composer">
+            <div class="composer-head">
+              <div class="composer-tabs" role="tablist" aria-label="玩家操作">
+                <button type="button" class="composer-tab active" data-player-compose-mode="chat">发言</button>
+                <button type="button" class="composer-tab" data-player-compose-mode="roll">投掷</button>
+              </div>
+              <span id="playerComposerHint">说话，或者切换到投掷进行技能判定。</span>
+            </div>
+            <form id="playerChatForm" class="chat-compose player-compose-pane" data-player-pane="chat">
+              <label>
+                <span>发言角色</span>
+                <select name="speaker"></select>
+              </label>
+              <label class="chat-message-field">
+                <span>消息</span>
+                <textarea name="message" rows="3"></textarea>
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                <span>发送</span>
+              </button>
+            </form>
+            <form id="playerRollForm" class="player-roll-form player-compose-pane" data-player-pane="roll" hidden>
+              <label>
+                <span>投掷角色</span>
+                <select name="speaker"></select>
+              </label>
+              <label>
+                <span>技能</span>
+                <select name="skill"></select>
+              </label>
+              <label>
+                <span>修正</span>
+                <input name="modifier" type="number" value="0" />
+              </label>
+              <label>
+                <span>DC</span>
+                <input name="dc" type="number" min="1" max="40" value="15" />
+              </label>
+              <label>
+                <span>优势</span>
+                <select name="advantage">
+                  <option value="normal">普通</option>
+                  <option value="advantage">优势</option>
+                  <option value="disadvantage">劣势</option>
+                </select>
+              </label>
+              <label class="chat-message-field">
+                <span>行动描述</span>
+                <textarea name="action" rows="2"></textarea>
+              </label>
+              <button class="ghost-button" type="submit">
+                <i data-lucide="dice-5"></i>
+                <span>投骰</span>
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+    <button class="rules-assistant-launcher" id="rulesAssistantLauncher" type="button" title="规则助手">
+      <svg class="book-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 7v14" />
+        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+      </svg>
+      <span>规则助手</span>
+    </button>
+    <aside class="rules-assistant-panel" id="rulesAssistantPanel" hidden aria-label="规则助手">
+      <div class="rules-assistant-head">
+        <div>
+          <span class="eyebrow">规则助手</span>
+          <strong>只答规则，不剧透剧情</strong>
+        </div>
+        <button class="icon-button" type="button" id="closeRulesAssistantButton" title="关闭规则助手">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <details class="rules-assistant-docs">
+        <summary>规则文档与下载</summary>
+        <div id="rulesAssistantDocs"></div>
+      </details>
+      <div class="rules-assistant-messages" id="rulesAssistantMessages"></div>
+      <div class="rules-assistant-quota" id="rulesAssistantQuota"></div>
+      <form class="rules-assistant-form" id="rulesAssistantForm">
+        <textarea id="rulesAssistantInput" rows="2" maxlength="300" placeholder="问一条规则，例如：理智检定怎么算成功等级？"></textarea>
+        <button class="primary-button compact-select" type="submit" id="rulesAssistantSendButton">
+          <i data-lucide="send"></i><span>提问</span>
+        </button>
+      </form>
+      <p class="rules-assistant-note">只回答规则文档中的内容；当前剧情、NPC 秘密和下一步该做什么，请询问主持人。</p>
+    </aside>
+    <section class="content-library-overlay ui-smoke-overlay" id="uiSmokeOverlay" hidden aria-label="界面自检">
+      <div class="content-library-shell ui-smoke-shell">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">界面自检</span>
+            <h2>五项关键界面检查</h2>
+            <p class="section-kicker">只检查当前页面的布局和浮层状态，不改动战役数据。</p>
+          </div>
+          <button class="icon-button" type="button" id="closeUiSmokeButton" title="关闭">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="ui-smoke-results" id="uiSmokeResults"></div>
+        <div class="button-row">
+          <button class="primary-button" type="button" id="runUiSmokeButton"><i data-lucide="play"></i><span>重新检查</span></button>
+          <span class="status-pill" id="uiSmokeStatus">未运行</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-library-overlay user-profile-overlay" id="userProfileOverlay" hidden aria-label="用户资料">
+      <div class="content-library-shell user-profile-shell">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">用户资料</span>
+            <h2>你的昵称与头像</h2>
+            <p class="section-kicker">这里只影响你的用户资料，不会改变角色名。</p>
+          </div>
+          <button class="icon-button" type="button" id="closeUserProfileButton" title="关闭">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="user-profile-body">
+          <div class="user-profile-preview">
+            <div class="user-profile-avatar" id="userProfileAvatarPreview"></div>
+            <strong id="userProfilePreviewName">玩家</strong>
+          </div>
+          <div class="user-profile-fields">
+            <label>
+              <span>用户昵称</span>
+              <input id="userProfileName" type="text" maxlength="24" placeholder="例如：阿北" />
+            </label>
+            <div>
+              <span class="field-label">默认头像</span>
+              <div class="user-avatar-options" id="userProfileAvatarOptions"></div>
+            </div>
+            <div class="button-row">
+              <button type="button" class="ghost-button" id="userProfileUploadButton">
+                <i data-lucide="image-up"></i>
+                <span>上传自定义头像</span>
+              </button>
+              <input id="userProfileFile" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+              <button type="button" class="ghost-button" id="userProfileResetButton">
+                <i data-lucide="rotate-ccw"></i>
+                <span>恢复默认</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="button-row user-profile-actions">
+          <button type="button" class="primary-button" id="saveUserProfileButton">
+            <i data-lucide="save"></i>
+            <span>保存资料</span>
+          </button>
+          <button type="button" class="ghost-button" id="openAccountRecoveryButton">
+            <i data-lucide="key-round"></i>
+            <span>账户与恢复码</span>
+          </button>
+          <span class="status-pill" id="userProfileStatus">资料只保存在本设备</span>
+        </div>
+      </div>
+    </section>
+    <section class="content-library-overlay account-settings-overlay" id="accountSettingsOverlay" hidden aria-label="账户资料">
+      <div class="content-library-shell account-settings-shell">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">访客账户</span>
+            <h2>账户资料与恢复</h2>
+            <p class="section-kicker">无需登录。账户由浏览器 cookie 自动识别，角色和存档按账户保存。</p>
+          </div>
+          <button class="icon-button" type="button" id="closeAccountSettingsButton" title="关闭">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="account-settings-grid">
+          <section class="account-settings-card">
+            <div class="section-heading compact"><h3>资料</h3><span class="status-pill" id="accountNumberLabel">—</span></div>
+            <label><span>显示名字</span><input id="accountDisplayNameInput" type="text" maxlength="60" /></label>
+            <label><span>头像 URL</span><input id="accountAvatarInput" type="url" maxlength="500" placeholder="可留空；也可填写图片地址" /></label>
+            <label><span>恢复码</span><input id="accountRecoveryCode" type="text" readonly /></label>
+            <div class="button-row">
+              <button class="primary-button" type="button" id="saveAccountProfileButton"><i data-lucide="save"></i><span>保存资料</span></button>
+              <button class="ghost-button" type="button" id="copyAccountRecoveryButton"><i data-lucide="copy"></i><span>复制恢复码</span></button>
+            </div>
+            <p class="field-hint" id="accountProfileStatus"></p>
+          </section>
+          <section class="account-settings-card">
+            <div class="section-heading compact"><h3>恢复与旧存档</h3></div>
+            <label><span>用恢复码接回账户</span><input id="accountRecoveryInput" type="text" placeholder="粘贴另一台设备的恢复码" /></label>
+            <button class="ghost-button" type="button" id="recoverAccountButton"><i data-lucide="rotate-ccw"></i><span>接回这个账户</span></button>
+            <hr />
+            <p class="field-hint">旧版本留下的无账户存档可以认领到当前账户，认领后其他账户不会再看到。</p>
+            <button class="ghost-button" type="button" id="claimLegacySavesButton"><i data-lucide="archive-restore"></i><span>认领旧存档</span></button>
+            <p class="field-hint" id="accountRecoveryStatus"></p>
+          </section>
+        </div>
+      </div>
+    </section>
+    <div class="mention-menu" id="playerMentionMenu" hidden></div>
+  </body>
+</html>

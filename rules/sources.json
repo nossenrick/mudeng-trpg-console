@@ -1,0 +1,18 @@
+[
+  {
+    "id": "coc7e",
+    "label": "CoC 7e 守秘人规则书 · 中文完整版",
+    "text": "coc7e-keeper.txt",
+    "pdf": "coc7e-keeper.pdf",
+    "source": "本地导入的《克苏鲁的呼唤》第七版守秘人规则书中文完整版",
+    "note": "完整中文规则书，供规则助手本地检索；不把整本书发送给模型。"
+  },
+  {
+    "id": "dnd5e",
+    "label": "D&D 5e SRD 5.1",
+    "text": "dnd5e-srd.txt",
+    "pdf": "dnd5e-srd.pdf",
+    "source": "https://media.wizards.com/2023/downloads/dnd/SRD_CC_v5.1.pdf",
+    "note": "Wizards of the Coast 发布的 SRD 5.1 文档。"
+  }
+]
